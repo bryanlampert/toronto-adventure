@@ -1,0 +1,14 @@
+{
+  "platforms": [
+      {"image": "ground", "x": 0, "y": 546},
+      {"image": "concrete-platform", "x": 420, "y": 420},
+      {"image": "concrete-platform", "x": 452, "y": 420},
+      {"image": "concrete-platform", "x": 484, "y": 420},
+      {"image": "concrete-platform", "x": 516, "y": 420},
+      {"image": "concrete-platform", "x": 600, "y": 250},
+      {"image": "concrete-platform", "x": 632, "y": 250},
+      {"image": "concrete-platform", "x": 664, "y": 250},
+      {"image": "concrete-platform", "x": 696, "y": 250}
+  ],
+  "blob": {"x": 21, "y": 0}
+}

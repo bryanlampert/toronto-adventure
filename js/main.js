@@ -114,7 +114,8 @@ PlayState.init = function () {
   this.keys = this.game.input.keyboard.addKeys({
     left: Phaser.KeyCode.LEFT,
     right: Phaser.KeyCode.RIGHT,
-    up: Phaser.KeyCode.UP
+    up: Phaser.KeyCode.UP,
+    space: Phaser.KeyCode.SPACEBAR
   });
 
   this.keys.up.onDown.add(function() {
@@ -123,6 +124,13 @@ PlayState.init = function () {
       this.sfx.jump.play();
     }
   }, this);
+  this.keys.space.onDown.add(function() {
+    let didJump = this.blob.jump();
+    if (didJump) {
+      this.sfx.jump.play();
+    }
+  }, this);
+
   this.tokenPickupCount = 0;
   this.hasPresto = false;
 };
@@ -133,6 +141,10 @@ PlayState.preload = function () {
   this.game.load.image('background', 'images/background.png');
   this.game.load.image('ground', 'images/ground.png');
   this.game.load.image('concrete-platform', 'images/concrete-platform.png');
+  this.game.load.image('concrete-platform2', 'images/concrete-platform2.png');
+  this.game.load.image('concrete-platform4', 'images/concrete-platform4.png');
+  this.game.load.image('concrete-platform6', 'images/concrete-platform6.png');
+  this.game.load.image('concrete-platform8', 'images/concrete-platform8.png');
   this.game.load.image('invisible-wall', 'images/invisible_wall.png');
   this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('font:numbers', 'images/numbers.png');
@@ -194,7 +206,6 @@ PlayState._loadLevel = function (data) {
   this.tokens = this.game.add.group();
   this.raccoons = this.game.add.group();
   this.enemyWalls = this.game.add.group();
-  this.enemyWalls.visible = false;
   data.platforms.forEach(this._spawnPlatform, this);
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons});
   data.tokens.forEach(this._spawnToken, this);
@@ -254,6 +265,7 @@ PlayState._spawnEnemyWall = function (x, y, side) {
     this.game.physics.enable(sprite);
     sprite.body.immovable = true;
     sprite.body.allowGravity = false;
+    sprite.visible = true;
 };
 
 PlayState._handleCollisions = function() {
@@ -293,12 +305,12 @@ PlayState._onBlobVsPresto = function (blob, presto) {
 };
 
 PlayState._createHud = function () {
-  this.prestoIcon = this.game.make.image(0, 19, 'icon:presto');
+  this.prestoIcon = this.game.make.image(0, 21, 'icon:presto');
   this.prestoIcon.anchor.set(0, 0.5);
   const NUMBERS_STR = '0123456789X ';
   this.tokenFont = this.game.add.retroFont('font:numbers', 20, 26,
     NUMBERS_STR, 6);
-  let tokenIcon = this.game.make.image(this.prestoIcon.width + 7, 0, 'icon:token');
+  let tokenIcon = this.game.make.image(this.prestoIcon.width + 7, 2, 'icon:token');
   let tokenScoreImg = this.game.make.image(tokenIcon.x + tokenIcon.width,
     tokenIcon.height / 2, this.tokenFont);
   tokenScoreImg.anchor.set(0, 0.5);

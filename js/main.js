@@ -1,12 +1,17 @@
+const game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
+let toggleHud;
+let playerBlob;
+
 function Blob(game, x, y) {
   Phaser.Sprite.call(this, game, x, y, 'blob');
   this.anchor.set(0.5, 0.5);
-  this.game.physics.enable(this);
+  this.game.physics.arcade.enable(this);
   this.body.collideWorldBounds = true;
   this.animations.add('stop', [0]);
   this.animations.add('run', [1, 2], 8, true); // 8fps looped
   this.animations.add('jump', [3]);
   this.animations.add('fall', [4]);
+  playerBlob = this;
 }
 
 Blob.prototype = Object.create(Phaser.Sprite.prototype);
@@ -67,8 +72,7 @@ function Raccoon(game, x, y) {
     this.anchor.set(0.5);
     // animation
     this.animations.add('crawl', [0, 1, 2], 8, true);
-    // this.animations.add('die', [0, 3, 0, 3, 0, 3, 0, 3, 0, 3, 0, 3], 12);
-    this.animations.add('die', [0, 4, 0, 4, 0, 4, 3, 3, 3, 3, 3, 3], 12);
+    this.animations.add('die', [3, 4, 3, 4, 3, 4, 3, 3, 3, 3, 3, 3], 12);
     this.animations.play('crawl');
 
     // physic properties
@@ -129,25 +133,27 @@ PlayState.preload = function () {
   this.game.load.image('background', 'images/background.png');
   this.game.load.image('ground', 'images/ground.png');
   this.game.load.image('concrete-platform', 'images/concrete-platform.png');
-  this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
-
-  this.game.load.audio('sfx:jump', 'audio/jump.wav');
-  this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
-  this.game.load.audio('sfx:token', 'audio/token.wav');
-  this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
   this.game.load.image('invisible-wall', 'images/invisible_wall.png');
-  this.game.load.audio('sfx:stomp', 'audio/stomp.wav');
-  this.game.load.audio('sfx:death', 'audio/death.mp3');
   this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('font:numbers', 'images/numbers.png');
-  // this.game.load.spritesheet('door', 'images/door.png', 42, 66);
   this.game.load.image('presto', 'images/presto.png');
-  this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
+
+  this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
+  this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
+  this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
+
+  this.game.load.audio('sfx:jump', 'audio/jump.wav');
+  this.game.load.audio('sfx:token', 'audio/token.wav');
+  this.game.load.audio('sfx:stomp', 'audio/stomp.wav');
+  this.game.load.audio('sfx:death', 'audio/death.mp3');
+  this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
 };
 
 
 PlayState.create = function () {
+  this.game.add.tileSprite(0, 0, 900, 719, 'background');
+  game.world.setBounds(0, 0, 1920, 600);
   this.sfx = {
     jump: this.game.add.audio('sfx:jump'),
     token: this.game.add.audio('sfx:token'),
@@ -159,6 +165,8 @@ PlayState.create = function () {
   this.game.add.image(0, -150, 'background');
   this._loadLevel(this.game.cache.getJSON('level:1'));
   this._createHud();
+  this.game.camera.follow(playerBlob)
+  this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
 };
 
 PlayState.update = function () {
@@ -301,10 +309,13 @@ PlayState._createHud = function () {
   this.hud.position.set(10, 10);
   this.hud.add(tokenScoreImg);
   this.hud.add(this.prestoIcon);
+  // this.prestoIcon.fixedToCamera = true;
+  this.hud.fixedToCamera = true;
+
 };
 
 window.onload = function () {
-  let game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
+ // let game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
   game.state.add('play', PlayState);
   game.state.start('play');
 };

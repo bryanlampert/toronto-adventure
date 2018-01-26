@@ -118,6 +118,8 @@ PlayState.init = function () {
     space: Phaser.KeyCode.SPACEBAR
   });
 
+  this.keys.preventDefault = true;
+
   this.keys.up.onDown.add(function() {
     let didJump = this.blob.jump();
     if (didJump) {
@@ -138,18 +140,24 @@ PlayState.init = function () {
 PlayState.preload = function () {
   this.game.load.json('level:1', 'data/level01.json');
 
-  this.game.load.image('background', 'images/background.png');
+  this.game.load.image('background', 'images/background.jpg');
   this.game.load.image('ground', 'images/ground.png');
   this.game.load.image('concrete-platform', 'images/concrete-platform.png');
   this.game.load.image('concrete-platform2', 'images/concrete-platform2.png');
   this.game.load.image('concrete-platform4', 'images/concrete-platform4.png');
   this.game.load.image('concrete-platform6', 'images/concrete-platform6.png');
   this.game.load.image('concrete-platform8', 'images/concrete-platform8.png');
+  this.game.load.image('girder-sm', 'images/girder-sm.png');
+  this.game.load.image('girder-md', 'images/girder-md.png');
+  this.game.load.image('girder-lg', 'images/girder-lg.png');
+  this.game.load.image('moving-girder-sm', 'images/moving-girder-sm.png');
   this.game.load.image('invisible-wall', 'images/invisible_wall.png');
+  this.game.load.image('invisible-floor', 'images/invisible_floor.png');
   this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('font:numbers', 'images/numbers.png');
   this.game.load.image('presto', 'images/presto.png');
   this.game.load.image('icon:heart', 'images/heart.png');
+  this.game.load.image('skyscraper', 'images/skyscraper.png');
 
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
@@ -176,7 +184,7 @@ PlayState.create = function () {
   };
 
   this.game.add.image(0, -150, 'background');
-  this.game.stage.backgroundColor = "#444";
+  this.game.stage.backgroundColor = "#01368c";
   this._loadLevel(this.game.cache.getJSON('level:1'));
   this._createHud();
   this.game.camera.follow(playerBlob)
@@ -211,10 +219,18 @@ PlayState._loadLevel = function (data) {
   this.tokens = this.game.add.group();
   this.raccoons = this.game.add.group();
   this.enemyWalls = this.game.add.group();
+  this.invisibleFloor = this.game.add.group();
+
+  this.movingPlatforms = this.add.physicsGroup();
+  this.movingPlatforms.setAll('body.allowGravity', false);
+  this.movingPlatforms.setAll('body.immovable', true);
+
   data.platforms.forEach(this._spawnPlatform, this);
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons});
   data.tokens.forEach(this._spawnToken, this);
   this._spawnPresto(data.presto.x, data.presto.y);
+  this._spawnFloor(data.floor.x, data.floor.y);
+  this._spawnMovingVert(data.movingPlatform.x, data.movingPlatform.y);
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
@@ -262,6 +278,27 @@ PlayState._spawnPresto = function (x, y) {
         .start();
 };
 
+PlayState._spawnMovingVert = function (x, y) {
+  this.platform = this.movingPlatforms.create(x, y, 'moving-girder-sm');
+  this.platform.anchor.set(0.5, 0.5);
+  this.game.physics.enable(this.platform);
+  this.platform.y -= 50;
+  this.game.add.tween(this.platform)
+      .to({y: this.presto.y}, 800, Phaser.Easing.Sinusoidal.InOut)
+      .yoyo(true)
+      .loop()
+      .start();
+  this.game.physics.arcade.collide(this.blob, this.platform);
+};
+
+PlayState._spawnFloor = function(x, y) {
+  this.floor = this.invisibleFloor.create(x, y, 'invisible-floor');
+  this.floor.anchor.set(0.5, 0.5);
+  this.game.physics.enable(this.floor);
+  this.floor.body.allowGravity = false;
+  this.floor.renderable = true;
+};
+
 PlayState._spawnEnemyWall = function (x, y, side) {
     let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
     // anchor and y displacement
@@ -271,11 +308,11 @@ PlayState._spawnEnemyWall = function (x, y, side) {
     this.game.physics.enable(sprite);
     sprite.body.immovable = true;
     sprite.body.allowGravity = false;
-    sprite.renderable = false;
-    // sprite.visible = true;
+    sprite.renderable = true;
 };
 
 PlayState._handleCollisions = function() {
+  // console.log(this.platforms)
   this.game.physics.arcade.collide(this.raccoons, this.platforms);
   this.game.physics.arcade.collide(this.raccoons, this.enemyWalls);
   this.game.physics.arcade.collide(this.blob, this.platforms);
@@ -284,7 +321,11 @@ PlayState._handleCollisions = function() {
   this.game.physics.arcade.overlap(this.blob, this.raccoons,
     this._onBlobVsEnemy, null, this);
   this.game.physics.arcade.overlap(this.blob, this.presto, this._onBlobVsPresto,
-        null, this)
+        null, this);
+  this.game.physics.arcade.overlap(this.blob, this.floor, this._onBlobVsFall,
+        null, this);
+  this.game.physics.arcade.overlap(this.racoons, this.floor, this._onEnemyVsFall,
+        null, this);
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -305,6 +346,15 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
     this._killPlayer();
   }
 };
+
+PlayState._onBlobVsFall = function (blob, floor) {
+  this.sfx.death.play();
+  this.game.state.restart();
+}
+
+PlayState._onEnemyVsFall = function (enemy, floor) {
+  enemy.kill();
+}
 
 PlayState._onBlobVsPresto = function (blob, presto) {
     this.sfx.presto.play();

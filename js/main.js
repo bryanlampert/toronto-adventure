@@ -165,7 +165,7 @@ PlayState.preload = function () {
 
 PlayState.create = function () {
   this.game.add.tileSprite(0, 0, 900, 719, 'background');
-  game.world.setBounds(0, 0, 1920, 600);
+  game.world.setBounds(0, -100, 5000, 700);
   this.sfx = {
     jump: this.game.add.audio('sfx:jump'),
     token: this.game.add.audio('sfx:token'),
@@ -175,6 +175,7 @@ PlayState.create = function () {
   };
 
   this.game.add.image(0, -150, 'background');
+  this.game.stage.backgroundColor = "#444";
   this._loadLevel(this.game.cache.getJSON('level:1'));
   this._createHud();
   this.game.camera.follow(playerBlob)

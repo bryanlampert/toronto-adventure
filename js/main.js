@@ -1,6 +1,7 @@
 const game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
 let toggleHud;
 let playerBlob;
+// let livesCount = 0;
 
 function Blob(game, x, y) {
   Phaser.Sprite.call(this, game, x, y, 'blob');
@@ -110,7 +111,6 @@ PlayState = {};
 
 PlayState.init = function () {
   this.game.renderer.renderSession.roundPixels = true;
-
   this.keys = this.game.input.keyboard.addKeys({
     left: Phaser.KeyCode.LEFT,
     right: Phaser.KeyCode.RIGHT,
@@ -149,6 +149,7 @@ PlayState.preload = function () {
   this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('font:numbers', 'images/numbers.png');
   this.game.load.image('presto', 'images/presto.png');
+  this.game.load.image('icon:heart', 'images/heart.png');
 
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
@@ -180,12 +181,15 @@ PlayState.create = function () {
   this._createHud();
   this.game.camera.follow(playerBlob)
   this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
+  this.livesCount = 3;
+
 };
 
 PlayState.update = function () {
   this._handleCollisions();
   this._handleInput();
   this.tokenFont.text = `x${this.tokenPickupCount}`;
+  this.livesFont.text = `x${this.livesCount}`;
   this.prestoIcon.frame = this.hasPresto ? 1 : 0;
 };
 
@@ -214,6 +218,7 @@ PlayState._loadLevel = function (data) {
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
+  this.livesCount;
 };
 
 PlayState._spawnPlatform = function (platform) {
@@ -266,7 +271,8 @@ PlayState._spawnEnemyWall = function (x, y, side) {
     this.game.physics.enable(sprite);
     sprite.body.immovable = true;
     sprite.body.allowGravity = false;
-    sprite.visible = true;
+    sprite.renderable = false;
+    // sprite.visible = true;
 };
 
 PlayState._handleCollisions = function() {
@@ -295,7 +301,8 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
   }
   else { //game over, restart
     this.sfx.death.play();
-    this.game.state.restart();
+    this.livesCount--;
+    this._killPlayer();
   }
 };
 
@@ -305,16 +312,28 @@ PlayState._onBlobVsPresto = function (blob, presto) {
     this.hasPresto = true;
 };
 
+PlayState._killPlayer = function() {
+  this.blob.kill();
+  this.game.state.restart(true, false, this.livesCount)
+}
+
 PlayState._createHud = function () {
   this.prestoIcon = this.game.make.image(0, 21, 'icon:presto');
   this.prestoIcon.anchor.set(0, 0.5);
   const NUMBERS_STR = '0123456789X ';
   this.tokenFont = this.game.add.retroFont('font:numbers', 20, 26,
     NUMBERS_STR, 6);
+  this.livesFont = this.game.add.retroFont('font:numbers', 20, 26,
+    NUMBERS_STR, 6);
   let tokenIcon = this.game.make.image(this.prestoIcon.width + 7, 2, 'icon:token');
   let tokenScoreImg = this.game.make.image(tokenIcon.x + tokenIcon.width,
     tokenIcon.height / 2, this.tokenFont);
   tokenScoreImg.anchor.set(0, 0.5);
+
+  let livesIcon = this.game.make.image(this.prestoIcon.width + 7, 50, 'icon:heart');
+  let livesCountImg = this.game.make.image(livesIcon.x + livesIcon.width,
+    70, this.livesFont);
+  livesCountImg.anchor.set(0, 0.5);
 
 
   this.hud = this.game.add.group();
@@ -322,7 +341,8 @@ PlayState._createHud = function () {
   this.hud.position.set(10, 10);
   this.hud.add(tokenScoreImg);
   this.hud.add(this.prestoIcon);
-  // this.prestoIcon.fixedToCamera = true;
+  this.hud.add(livesIcon);
+  this.hud.add(livesCountImg);
   this.hud.fixedToCamera = true;
 
 };

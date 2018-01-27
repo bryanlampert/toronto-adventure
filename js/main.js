@@ -151,6 +151,8 @@ PlayState.preload = function () {
   this.game.load.image('presto', 'images/presto.png');
   this.game.load.image('icon:heart', 'images/heart.png');
 
+  this.game.load.spritesheet('streetcar', 'images/streetcar.png', 150, 300);
+
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
@@ -215,6 +217,7 @@ PlayState._loadLevel = function (data) {
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons});
   data.tokens.forEach(this._spawnToken, this);
   this._spawnPresto(data.presto.x, data.presto.y);
+  this._spawnStreetcar(data.streetcar.x, data.streetcar.y);
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
@@ -310,6 +313,13 @@ PlayState._onBlobVsPresto = function (blob, presto) {
     this.sfx.presto.play();
     presto.kill();
     this.hasPresto = true;
+};
+
+PlayState._spawnStreetcar = function (x, y) {
+    this.streetcar = this.bgDecoration.create(x, y, 'streetcar');
+    this.streetcar.anchor.setTo(0.5, 1);
+    this.game.physics.enable(this.streetcar);
+    this.streetcar.body.allowGravity = false;
 };
 
 PlayState._killPlayer = function() {

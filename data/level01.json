@@ -71,5 +71,6 @@
   "presto": {"x": 2450, "y": 250},
   "floor": {"x": 30, "y": 641},
   "movingPlatform": {"x": 6000, "y": 900},
-  "entrance": {"x": 4900, "y": 220}
+  "entrance": {"x": 4900, "y": 220},
+  "hearts": [{"x": 3950, "y": 50}]
 }

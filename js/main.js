@@ -1,7 +1,7 @@
 const game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
 let toggleHud;
 let playerBlob;
-// let livesCount = 0;
+let livesCount;
 
 function Blob(game, x, y) {
   Phaser.Sprite.call(this, game, x, y, 'blob');
@@ -164,6 +164,7 @@ PlayState.preload = function () {
 
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
+  this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
   this.game.load.spritesheet('enter-transit', 'images/door.png', 42, 66);
@@ -174,6 +175,7 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:death', 'audio/death.mp3');
   this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
   this.game.load.audio('sfx:nextLevel', 'audio/nextLevel.wav');
+  this.game.load.audio('sfx:heart', 'audio/heart.wav');
 };
 
 
@@ -186,7 +188,8 @@ PlayState.create = function () {
     stomp: this.game.add.audio('sfx:stomp'),
     death: this.game.add.audio('sfx:death'),
     presto: this.game.add.audio('sfx:presto'),
-    nextLevel: this.game.add.audio('sfx:nextLevel')
+    nextLevel: this.game.add.audio('sfx:nextLevel'),
+    heart: this.game.add.audio('sfx:heart')
   };
 
   this.game.add.image(0, -150, 'background');
@@ -195,7 +198,7 @@ PlayState.create = function () {
   this._createHud();
   this.game.camera.follow(playerBlob)
   this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
-  this.livesCount = 3;
+  livesCount = 3;
 
 };
 
@@ -203,7 +206,7 @@ PlayState.update = function () {
   this._handleCollisions();
   this._handleInput();
   this.tokenFont.text = `x${this.tokenPickupCount}`;
-  this.livesFont.text = `x${this.livesCount}`;
+  this.livesFont.text = `x${livesCount}`;
   this.prestoIcon.frame = this.hasPresto ? 1 : 0;
 };
 
@@ -226,6 +229,7 @@ PlayState._loadLevel = function (data) {
   this.raccoons = this.game.add.group();
   this.enemyWalls = this.game.add.group();
   this.invisibleFloor = this.game.add.group();
+  this.hearts = this.game.add.group();
 
   this.movingPlatforms = this.add.physicsGroup();
   this.movingPlatforms.setAll('body.allowGravity', false);
@@ -234,6 +238,7 @@ PlayState._loadLevel = function (data) {
   data.platforms.forEach(this._spawnPlatform, this);
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons});
   data.tokens.forEach(this._spawnToken, this);
+  data.hearts.forEach(this._spawnHeart, this);
   this._spawnPresto(data.presto.x, data.presto.y);
   this._spawnFloor(data.floor.x, data.floor.y);
   this._spawnNextLevelEntrance(data.entrance.x, data.entrance.y);
@@ -241,7 +246,6 @@ PlayState._loadLevel = function (data) {
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
-  this.livesCount;
 };
 
 PlayState._spawnPlatform = function (platform) {
@@ -283,6 +287,21 @@ PlayState._spawnPresto = function (x, y) {
         .yoyo(true)
         .loop()
         .start();
+};
+
+PlayState._spawnHeart = function (heart) {
+  let sprite = this.hearts.create(heart.x, heart.y, 'heart');
+  sprite.anchor.set(0.5, 0.5);
+  sprite.animations.add('rotate', [0, 1, 2, 1], 5, true);
+  sprite.animations.play('rotate');
+  this.game.physics.enable(sprite);
+  sprite.body.allowGravity = false;
+  sprite.y -= 10;
+  this.game.add.tween(sprite)
+      .to({y: sprite.y + 25}, 900, Phaser.Easing.Sinusoidal.InOut)
+      .yoyo(true)
+      .loop()
+      .start();
 };
 
 PlayState._spawnMovingVert = function (x, y) {
@@ -344,6 +363,8 @@ PlayState._handleCollisions = function() {
     function (blob, entrance) {
         return this.hasPresto && blob.body.touching.down;
     }, this);
+  this.game.physics.arcade.overlap(this.blob, this.hearts, this._onBlobVsLives,
+        null, this);
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -360,7 +381,7 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
   }
   else { //game over, restart
     this.sfx.death.play();
-    this.livesCount--;
+    livesCount--;
     this._killPlayer();
   }
 };
@@ -375,20 +396,26 @@ PlayState._onEnemyVsFall = function (enemy, floor) {
 }
 
 PlayState._onBlobVsPresto = function (blob, presto) {
-    this.sfx.presto.play();
-    presto.kill();
-    this.hasPresto = true;
+  this.sfx.presto.play();
+  presto.kill();
+  this.hasPresto = true;
+};
+
+PlayState._onBlobVsLives = function (blob, heart) {
+  this.sfx.heart.play();
+  heart.kill();
+  livesCount++;
 };
 
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
   this.sfx.nextLevel.play();
   this.game.state.restart(true, false, {level: this.level + 1});
-}
+};
 
 PlayState._killPlayer = function() {
   this.blob.kill();
-  this.game.state.restart(true, false, {level: this.level, livesCount: this.livesCount})
-}
+  this.game.state.restart(true, false, {level: this.level, livesCount: livesCount});
+};
 
 PlayState._createHud = function () {
   this.prestoIcon = this.game.make.image(0, 21, 'icon:presto');

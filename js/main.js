@@ -106,10 +106,10 @@ Raccoon.prototype.die = function () {
     }, this);
 };
 
-
 PlayState = {};
+const LEVEL_COUNT = 2;
 
-PlayState.init = function () {
+PlayState.init = function (data) {
   this.game.renderer.renderSession.roundPixels = true;
   this.keys = this.game.input.keyboard.addKeys({
     left: Phaser.KeyCode.LEFT,
@@ -135,9 +135,12 @@ PlayState.init = function () {
 
   this.tokenPickupCount = 0;
   this.hasPresto = false;
+
+  this.level = (data.level || 0) % LEVEL_COUNT;
 };
 
 PlayState.preload = function () {
+  this.game.load.json('level:0', 'data/level00.json');
   this.game.load.json('level:1', 'data/level01.json');
 
   this.game.load.image('background', 'images/background.jpg');
@@ -163,12 +166,14 @@ PlayState.preload = function () {
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
+  this.game.load.spritesheet('enter-transit', 'images/door.png', 42, 66);
 
   this.game.load.audio('sfx:jump', 'audio/jump.wav');
   this.game.load.audio('sfx:token', 'audio/token.wav');
   this.game.load.audio('sfx:stomp', 'audio/stomp.wav');
   this.game.load.audio('sfx:death', 'audio/death.mp3');
   this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
+  this.game.load.audio('sfx:nextLevel', 'audio/nextLevel.wav');
 };
 
 
@@ -180,12 +185,13 @@ PlayState.create = function () {
     token: this.game.add.audio('sfx:token'),
     stomp: this.game.add.audio('sfx:stomp'),
     death: this.game.add.audio('sfx:death'),
-    presto: this.game.add.audio('sfx:presto')
+    presto: this.game.add.audio('sfx:presto'),
+    nextLevel: this.game.add.audio('sfx:nextLevel')
   };
 
   this.game.add.image(0, -150, 'background');
   this.game.stage.backgroundColor = "#01368c";
-  this._loadLevel(this.game.cache.getJSON('level:1'));
+  this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
   this._createHud();
   this.game.camera.follow(playerBlob)
   this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
@@ -230,6 +236,7 @@ PlayState._loadLevel = function (data) {
   data.tokens.forEach(this._spawnToken, this);
   this._spawnPresto(data.presto.x, data.presto.y);
   this._spawnFloor(data.floor.x, data.floor.y);
+  this._spawnNextLevelEntrance(data.entrance.x, data.entrance.y);
   this._spawnMovingVert(data.movingPlatform.x, data.movingPlatform.y);
   //enable gravity
   const GRAVITY = 1200;
@@ -296,8 +303,15 @@ PlayState._spawnFloor = function(x, y) {
   this.floor.anchor.set(0.5, 0.5);
   this.game.physics.enable(this.floor);
   this.floor.body.allowGravity = false;
-  this.floor.renderable = true;
+  this.floor.renderable = false;
 };
+
+PlayState._spawnNextLevelEntrance = function (x,y) {
+  this.entrance = this.bgDecoration.create(x, y, 'enter-transit');
+  this.entrance.anchor.setTo(0.5, 1);
+  this.game.physics.enable(this.entrance);
+  this.entrance.body.allowGravity = false;
+}
 
 PlayState._spawnEnemyWall = function (x, y, side) {
     let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
@@ -308,7 +322,7 @@ PlayState._spawnEnemyWall = function (x, y, side) {
     this.game.physics.enable(sprite);
     sprite.body.immovable = true;
     sprite.body.allowGravity = false;
-    sprite.renderable = true;
+    sprite.renderable = false;
 };
 
 PlayState._handleCollisions = function() {
@@ -326,6 +340,10 @@ PlayState._handleCollisions = function() {
         null, this);
   this.game.physics.arcade.overlap(this.racoons, this.floor, this._onEnemyVsFall,
         null, this);
+  this.game.physics.arcade.overlap(this.blob, this.entrance, this._onBlobVsNextLevel,
+    function (blob, entrance) {
+        return this.hasPresto && blob.body.touching.down;
+    }, this);
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -349,7 +367,7 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
 
 PlayState._onBlobVsFall = function (blob, floor) {
   this.sfx.death.play();
-  this.game.state.restart();
+  this._killPlayer();
 }
 
 PlayState._onEnemyVsFall = function (enemy, floor) {
@@ -362,9 +380,14 @@ PlayState._onBlobVsPresto = function (blob, presto) {
     this.hasPresto = true;
 };
 
+PlayState._onBlobVsNextLevel = function (blob, entrance) {
+  this.sfx.nextLevel.play();
+  this.game.state.restart(true, false, {level: this.level + 1});
+}
+
 PlayState._killPlayer = function() {
   this.blob.kill();
-  this.game.state.restart(true, false, this.livesCount)
+  this.game.state.restart(true, false, {level: this.level, livesCount: this.livesCount})
 }
 
 PlayState._createHud = function () {
@@ -398,8 +421,7 @@ PlayState._createHud = function () {
 };
 
 window.onload = function () {
- // let game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
   game.state.add('play', PlayState);
-  game.state.start('play');
+  game.state.start('play', true, false, {level: 0});
 };
 

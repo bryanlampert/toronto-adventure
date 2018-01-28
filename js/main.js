@@ -152,7 +152,7 @@ PlayState.preload = function () {
   this.game.load.image('icon:heart', 'images/heart.png');
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
-  this.game.load.spritesheet('construction', 'images/construction.png', 150, 300);
+  this.game.load.image('construction', 'images/construction.png', 300, 150);
 
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
@@ -214,11 +214,13 @@ PlayState._loadLevel = function (data) {
   this.tokens = this.game.add.group();
   this.raccoons = this.game.add.group();
   this.enemyWalls = this.game.add.group();
+  this.construction = this.game.add.group();
   data.platforms.forEach(this._spawnPlatform, this);
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons});
   data.tokens.forEach(this._spawnToken, this);
   this._spawnPresto(data.presto.x, data.presto.y);
   this._spawnStreetcar(data.streetcar.x, data.streetcar.y);
+  this._spawnConstruction(data.construction.x, data.construction.y);
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
@@ -266,6 +268,14 @@ PlayState._spawnPresto = function (x, y) {
         .start();
 };
 
+PlayState._spawnConstruction = function(x, y) {
+  this.construction = this.construction.create(x, y, 'construction');
+  this.construction.anchor.set(0.5, 0.5);
+  this.game.physics.enable(this.construction);
+  this.construction.body.allowGravity = false;
+  this.construction.renderable = true;
+};
+
 PlayState._spawnEnemyWall = function (x, y, side) {
     let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
     // anchor and y displacement
@@ -288,7 +298,10 @@ PlayState._handleCollisions = function() {
   this.game.physics.arcade.overlap(this.blob, this.raccoons,
     this._onBlobVsEnemy, null, this);
   this.game.physics.arcade.overlap(this.blob, this.presto, this._onBlobVsPresto,
-        null, this)
+    null, this)
+
+  this.game.physics.arcade.overlap(this.blob, this.construction, this._onBlobVsFallOnConstruction,
+    null, this);
 
   this.game.physics.arcade.overlap(this.blob, this.streetcar, this._onBlobVsStreetcar,
     // ignore if there is no key or the player is on air
@@ -307,6 +320,11 @@ PlayState._onBlobVsToken = function (blob, token) {
   this.sfx.token.play();
   token.kill();
   this.tokenPickupCount++;
+};
+
+PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
+  this.sfx.death.play();
+  this.game.state.restart();
 };
 
 PlayState._onBlobVsEnemy = function (blob, enemy) {

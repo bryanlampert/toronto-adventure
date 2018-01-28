@@ -151,7 +151,8 @@ PlayState.preload = function () {
   this.game.load.image('presto', 'images/presto.png');
   this.game.load.image('icon:heart', 'images/heart.png');
 
-  this.game.load.spritesheet('streetcar', 'images/streetcar.png', 150, 300);
+  this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
+  this.game.load.spritesheet('construction', 'images/construction.png', 150, 300);
 
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
@@ -288,6 +289,18 @@ PlayState._handleCollisions = function() {
     this._onBlobVsEnemy, null, this);
   this.game.physics.arcade.overlap(this.blob, this.presto, this._onBlobVsPresto,
         null, this)
+
+  this.game.physics.arcade.overlap(this.blob, this.streetcar, this._onBlobVsStreetcar,
+    // ignore if there is no key or the player is on air
+    function (blob, streetcar) {
+      return this.hasPresto && blob.body.touching.down;
+    }, this);
+};
+
+PlayState._onBlobVsStreetcar = function (blob, streetcar) {
+//  this.sfx.door.play();
+  this.game.state.restart();
+  // TODO: go to the next level instead
 };
 
 PlayState._onBlobVsToken = function (blob, token) {

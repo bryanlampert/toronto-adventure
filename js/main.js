@@ -397,7 +397,6 @@ PlayState._onBlobVsToken = function (blob, token) {
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
   this.sfx.death.play();
-  livesCount--;
   this._killPlayer();
 };
 
@@ -409,14 +408,12 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
   }
   else { //game over, restart
     this.sfx.death.play();
-    livesCount--;
     this._killPlayer();
   }
 };
 
 PlayState._onBlobVsFall = function (blob, floor) {
   this.sfx.death.play();
-  livesCount--;
   this._killPlayer();
 };
 
@@ -449,8 +446,23 @@ PlayState._spawnStreetcar = function (x, y) {
 };
 
 PlayState._killPlayer = function() {
+  livesCount--;
   this.blob.kill();
-  this.game.state.restart(true, false, {level: this.level, livesCount: livesCount, tokenPickupCount: tokenPickupCount});
+  if (livesCount == 0) {
+    alert('You lost, game over!');
+    livesCount = 3;
+    tokenPickupCount = 0;
+    this.game.state.restart(true, false, {level: 0});
+  } else {
+    this.game.state.restart(
+      true,
+      false,
+      {level: this.level,
+        livesCount: livesCount,
+        tokenPickupCount: tokenPickupCount
+      }
+    );
+  }
 };
 
 PlayState._createHud = function () {

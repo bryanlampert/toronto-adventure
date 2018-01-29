@@ -89,7 +89,7 @@
   "presto": {"x": 3320, "y": 75},
   "floor": {"x": 30, "y": 641},
   "movingPlatform": {"x": -3000, "y": -500},
-  "entrance": {"x": 4900, "y": 546},
+  "entrance": {"x": 4890, "y": 546},
   "hearts": [{"x": 1400, "y": 210}],
   "streetcar": {"x": 4800, "y": 550},
   "construction": {"x": 2450, "y": 450},

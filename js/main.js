@@ -184,6 +184,7 @@ PlayState.preload = function () {
   this.game.load.image('spring', 'images/spring.png');
   this.game.load.image('rental', 'images/rental.png');
   this.game.load.image('construction', 'images/construction.png', 300, 150);
+  this.game.load.image('enter-transit', 'images/open-door.png');
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
@@ -191,7 +192,6 @@ PlayState.preload = function () {
   this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
-  this.game.load.spritesheet('enter-transit', 'images/door.png', 42, 66);
 
   this.game.load.audio('sfx:jump', 'audio/jump.wav');
   this.game.load.audio('sfx:token', 'audio/token.wav');
@@ -238,6 +238,11 @@ PlayState.update = function () {
   this.tokenFont.text = `x${tokenPickupCount}`;
   this.livesFont.text = `x${livesCount}`;
   this.prestoIcon.frame = this.hasPresto ? 1 : 0;
+  if (this.hasPresto) {
+    this.entrance.renderable = true;
+  } else {
+    this.entrance.renderable = false;
+  }
 };
 
 PlayState._handleInput = function () {

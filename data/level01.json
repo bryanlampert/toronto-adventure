@@ -75,5 +75,6 @@
   "hearts": [{"x": 3950, "y": 50}],
   "streetcar": {"x": 4875, "y": 220},
   "construction": {"x": -3000, "y": -550},
-  "springs": []
+  "springs": [],
+  "rentals": [{"x": 1700, "y": 180}]
 }

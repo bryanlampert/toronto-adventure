@@ -5,6 +5,7 @@ let livesCount = 3;
 let tokenPickupCount = 0;
 let JUMP_SPEED = 645;
 let text;
+let SPEED = 200;
 
 WebFontConfig = {
   active: function() {
@@ -36,7 +37,6 @@ function Blob(game, x, y) {
 Blob.prototype = Object.create(Phaser.Sprite.prototype);
 Blob.prototype.constructor = Blob;
 Blob.prototype.move = function (direction) {
-  const SPEED = 200;
   this.body.velocity.x = direction * SPEED;
     if (this.body.velocity.x < 0) {
     this.scale.x = -1;
@@ -182,6 +182,7 @@ PlayState.preload = function () {
   this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('icon:heart', 'images/heart.png');
   this.game.load.image('spring', 'images/spring.png');
+  this.game.load.image('rental', 'images/rental.png');
   this.game.load.image('construction', 'images/construction.png', 300, 150);
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
@@ -199,7 +200,7 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
   this.game.load.audio('sfx:nextLevel', 'audio/nextLevel.wav');
   this.game.load.audio('sfx:heart', 'audio/heart.wav');
-  this.game.load.audio('sfx:spring', 'audio/spring.wav');
+  this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
 
   this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
 };
@@ -215,7 +216,7 @@ PlayState.create = function () {
     presto: this.game.add.audio('sfx:presto'),
     nextLevel: this.game.add.audio('sfx:nextLevel'),
     heart: this.game.add.audio('sfx:heart'),
-    spring: this.game.add.audio('sfx:spring')
+    bonus: this.game.add.audio('sfx:bonus')
   };
   if (this.level == 0) {
     this.game.add.image(0, -100, 'background-0');
@@ -261,6 +262,7 @@ PlayState._loadLevel = function (data) {
   this.invisibleFloor = this.game.add.group();
   this.hearts = this.game.add.group();
   this.springs = this.game.add.group();
+  this.rental = this.game.add.group();
 
   this.movingPlatforms = this.add.physicsGroup();
   this.movingPlatforms.setAll('body.allowGravity', false);
@@ -271,6 +273,7 @@ PlayState._loadLevel = function (data) {
   data.tokens.forEach(this._spawnToken, this);
   data.hearts.forEach(this._spawnHeart, this);
   data.springs.forEach(this._spawnSpring, this);
+  data.rentals.forEach(this._spawnRental, this);
   this._spawnPresto(data.presto.x, data.presto.y);
   this._spawnStreetcar(data.streetcar.x, data.streetcar.y);
   this._spawnConstruction(data.construction.x, data.construction.y);
@@ -359,6 +362,19 @@ PlayState._spawnSpring = function(spring) {
       .start();
 };
 
+PlayState._spawnRental = function(rental) {
+  let sprite = this.rental.create(rental.x, rental.y, 'rental');
+  sprite.anchor.set(0.5, 0.5);
+  this.game.physics.enable(sprite);
+  sprite.body.allowGravity = false;
+  sprite.y -= 10;
+  this.game.add.tween(sprite)
+      .to({y: sprite.y + 25}, 900, Phaser.Easing.Sinusoidal.InOut)
+      .yoyo(true)
+      .loop()
+      .start();
+};
+
 PlayState._spawnMovingVert = function (x, y) {
   this.platform = this.movingPlatforms.create(x, y, 'moving-girder-sm');
   this.platform.anchor.set(0.5, 0.5);
@@ -424,6 +440,8 @@ PlayState._handleCollisions = function() {
     null, this);
   this.game.physics.arcade.overlap(this.blob, this.springs, this._onBlobVsSprings,
         null, this);
+  this.game.physics.arcade.overlap(this.blob, this.rental, this._onBlobVsNewRental,
+        null, this);
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -471,7 +489,7 @@ PlayState._onBlobVsLives = function (blob, heart) {
 };
 
 PlayState._onBlobVsSprings = function (blob, spring) {
-  this.sfx.spring.play();
+  this.sfx.bonus.play();
   spring.kill();
   if (this.level == 0) {
     text = game.add.text(blob.x + 10, blob.y, 'You found a new spring in your step!');
@@ -487,7 +505,25 @@ PlayState._onBlobVsSprings = function (blob, spring) {
   setTimeout(function() {
     JUMP_SPEED = 645;
   }, 10000);
+};
 
+PlayState._onBlobVsNewRental = function (blob, rental) {
+  this.sfx.bonus.play();
+  rental.kill();
+  if (this.level == 1) {
+    text = game.add.text(blob.x + 10, blob.y, 'You found a new rental agreement!!\n Hurry to the listing to make sure you get there first!');
+    text.anchor.setTo(0.5);
+    text.font = 'Press Start 2P';
+    text.fontSize = 15;
+    text.padding.set(10, 16);
+    setTimeout(function() {
+      text.destroy();
+    }, 4000);
+  }
+  SPEED = 300;
+  setTimeout(function() {
+    SPEED = 200;
+  }, 10000);
 };
 
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
@@ -506,6 +542,7 @@ PlayState._killPlayer = function() {
   livesCount--;
   this.blob.kill();
   JUMP_SPEED = 645;
+  SPEED = 200;
   if (livesCount == 0) {
     alert('You lost, game over!');
     livesCount = 3;

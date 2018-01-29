@@ -2,6 +2,7 @@ const game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
 let toggleHud;
 let playerBlob;
 let livesCount = 3;
+let tokenPickupCount = 0;
 
 function Blob(game, x, y) {
   Phaser.Sprite.call(this, game, x, y, 'blob');
@@ -133,7 +134,6 @@ PlayState.init = function (data) {
     }
   }, this);
 
-  this.tokenPickupCount = 0;
   this.hasPresto = false;
 
   this.level = (data.level || 0) % LEVEL_COUNT;
@@ -212,7 +212,7 @@ PlayState.create = function () {
 PlayState.update = function () {
   this._handleCollisions();
   this._handleInput();
-  this.tokenFont.text = `x${this.tokenPickupCount}`;
+  this.tokenFont.text = `x${tokenPickupCount}`;
   this.livesFont.text = `x${livesCount}`;
   this.prestoIcon.frame = this.hasPresto ? 1 : 0;
 };
@@ -392,7 +392,7 @@ PlayState._handleCollisions = function() {
 PlayState._onBlobVsToken = function (blob, token) {
   this.sfx.token.play();
   token.kill();
-  this.tokenPickupCount++;
+  tokenPickupCount++;
 };
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
@@ -450,7 +450,7 @@ PlayState._spawnStreetcar = function (x, y) {
 
 PlayState._killPlayer = function() {
   this.blob.kill();
-  this.game.state.restart(true, false, {level: this.level, livesCount: livesCount});
+  this.game.state.restart(true, false, {level: this.level, livesCount: livesCount, tokenPickupCount: tokenPickupCount});
 };
 
 PlayState._createHud = function () {

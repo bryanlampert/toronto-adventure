@@ -162,6 +162,9 @@ PlayState.preload = function () {
   this.game.load.image('icon:heart', 'images/heart.png');
   this.game.load.image('skyscraper', 'images/skyscraper.png');
 
+  this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
+  this.game.load.image('construction', 'images/construction.png', 300, 150);
+
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
@@ -228,6 +231,7 @@ PlayState._loadLevel = function (data) {
   this.tokens = this.game.add.group();
   this.raccoons = this.game.add.group();
   this.enemyWalls = this.game.add.group();
+  this.construction = this.game.add.group();
   this.invisibleFloor = this.game.add.group();
   this.hearts = this.game.add.group();
 
@@ -240,6 +244,8 @@ PlayState._loadLevel = function (data) {
   data.tokens.forEach(this._spawnToken, this);
   data.hearts.forEach(this._spawnHeart, this);
   this._spawnPresto(data.presto.x, data.presto.y);
+  this._spawnStreetcar(data.streetcar.x, data.streetcar.y);
+  this._spawnConstruction(data.construction.x, data.construction.y);
   this._spawnFloor(data.floor.x, data.floor.y);
   this._spawnNextLevelEntrance(data.entrance.x, data.entrance.y);
   this._spawnMovingVert(data.movingPlatform.x, data.movingPlatform.y);
@@ -287,6 +293,14 @@ PlayState._spawnPresto = function (x, y) {
         .yoyo(true)
         .loop()
         .start();
+};
+
+PlayState._spawnConstruction = function(x, y) {
+  this.construction = this.construction.create(x, y, 'construction');
+  this.construction.anchor.set(0.5, 0.5);
+  this.game.physics.enable(this.construction);
+  this.construction.body.allowGravity = false;
+  this.construction.renderable = true;
 };
 
 PlayState._spawnHeart = function (heart) {
@@ -365,12 +379,33 @@ PlayState._handleCollisions = function() {
     }, this);
   this.game.physics.arcade.overlap(this.blob, this.hearts, this._onBlobVsLives,
         null, this);
+    null, this)
+
+  this.game.physics.arcade.overlap(this.blob, this.construction, this._onBlobVsFallOnConstruction,
+    null, this);
+
+  this.game.physics.arcade.overlap(this.blob, this.streetcar, this._onBlobVsStreetcar,
+    // ignore if there is no key or the player is on air
+    function (blob, streetcar) {
+      return this.hasPresto && blob.body.touching.down;
+    }, this);
+};
+
+PlayState._onBlobVsStreetcar = function (blob, streetcar) {
+//  this.sfx.door.play();
+  this.game.state.restart();
+  // TODO: go to the next level instead
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
   this.sfx.token.play();
   token.kill();
   this.tokenPickupCount++;
+};
+
+PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
+  this.sfx.death.play();
+  this.game.state.restart();
 };
 
 PlayState._onBlobVsEnemy = function (blob, enemy) {
@@ -410,6 +445,13 @@ PlayState._onBlobVsLives = function (blob, heart) {
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
   this.sfx.nextLevel.play();
   this.game.state.restart(true, false, {level: this.level + 1});
+};
+
+PlayState._spawnStreetcar = function (x, y) {
+    this.streetcar = this.bgDecoration.create(x, y, 'streetcar');
+    this.streetcar.anchor.setTo(0.5, 1);
+    this.game.physics.enable(this.streetcar);
+    this.streetcar.body.allowGravity = false;
 };
 
 PlayState._killPlayer = function() {

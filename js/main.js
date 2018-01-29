@@ -448,6 +448,10 @@ PlayState._onBlobVsToken = function (blob, token) {
   this.sfx.token.play();
   token.kill();
   tokenPickupCount++;
+  if (tokenPickupCount % 50 == 0) {
+    this.sfx.heart.play();
+    livesCount++;
+  }
 };
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {

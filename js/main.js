@@ -3,6 +3,23 @@ let toggleHud;
 let playerBlob;
 let livesCount = 3;
 let tokenPickupCount = 0;
+let JUMP_SPEED = 645;
+let text;
+
+WebFontConfig = {
+  active: function() {
+    game.time.events.add(Phaser.Timer.SECOND, createText, this);
+  },
+  google: {
+    families: ["Press Start 2P"]
+  }
+};
+
+// Loads the webfont by adding dummy font first
+function createText() {
+  text = game.add.text(game.world.centerX, game.world.centerY, "loading font");
+  text.destroy();
+}
 
 function Blob(game, x, y) {
   Phaser.Sprite.call(this, game, x, y, 'blob');
@@ -30,18 +47,18 @@ Blob.prototype.move = function (direction) {
 };
 
 Blob.prototype.jump = function () {
-  const JUMP_SPEED = 645;
-
   let canJump = this.body.touching.down;
   if (canJump) {
     this.body.velocity.y = -JUMP_SPEED;
   }
   return canJump;
 };
+
 Blob.prototype.bounce = function () {
     const BOUNCE_SPEED = 200;
     this.body.velocity.y = -BOUNCE_SPEED;
 };
+
 Blob.prototype._getAnimationName = function () {
     let name = 'stop'; // default animation
 
@@ -59,6 +76,7 @@ Blob.prototype._getAnimationName = function () {
 
     return name;
 };
+
 Blob.prototype.update = function () {
     // update sprite animation, if it needs changing
     let animationName = this._getAnimationName();
@@ -156,17 +174,17 @@ PlayState.preload = function () {
   this.game.load.image('girder-md', 'images/girder-md.png');
   this.game.load.image('girder-lg', 'images/girder-lg.png');
   this.game.load.image('moving-girder-sm', 'images/moving-girder-sm.png');
+  this.game.load.image('skyscraper', 'images/skyscraper.png');
   this.game.load.image('invisible-wall', 'images/invisible_wall.png');
   this.game.load.image('invisible-floor', 'images/invisible_floor.png');
-  this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('font:numbers', 'images/numbers.png');
   this.game.load.image('presto', 'images/presto.png');
+  this.game.load.image('icon:token', 'images/token_icon.png');
   this.game.load.image('icon:heart', 'images/heart.png');
-  this.game.load.image('skyscraper', 'images/skyscraper.png');
-
-  this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
+  this.game.load.image('spring', 'images/spring.png');
   this.game.load.image('construction', 'images/construction.png', 300, 150);
 
+  this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
@@ -181,6 +199,9 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
   this.game.load.audio('sfx:nextLevel', 'audio/nextLevel.wav');
   this.game.load.audio('sfx:heart', 'audio/heart.wav');
+  this.game.load.audio('sfx:spring', 'audio/spring.wav');
+
+  this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
 };
 
 
@@ -193,7 +214,8 @@ PlayState.create = function () {
     death: this.game.add.audio('sfx:death'),
     presto: this.game.add.audio('sfx:presto'),
     nextLevel: this.game.add.audio('sfx:nextLevel'),
-    heart: this.game.add.audio('sfx:heart')
+    heart: this.game.add.audio('sfx:heart'),
+    spring: this.game.add.audio('sfx:spring')
   };
   if (this.level == 0) {
     this.game.add.image(0, -100, 'background-0');
@@ -238,6 +260,7 @@ PlayState._loadLevel = function (data) {
   this.construction = this.game.add.group();
   this.invisibleFloor = this.game.add.group();
   this.hearts = this.game.add.group();
+  this.springs = this.game.add.group();
 
   this.movingPlatforms = this.add.physicsGroup();
   this.movingPlatforms.setAll('body.allowGravity', false);
@@ -247,6 +270,7 @@ PlayState._loadLevel = function (data) {
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons});
   data.tokens.forEach(this._spawnToken, this);
   data.hearts.forEach(this._spawnHeart, this);
+  data.springs.forEach(this._spawnSpring, this);
   this._spawnPresto(data.presto.x, data.presto.y);
   this._spawnStreetcar(data.streetcar.x, data.streetcar.y);
   this._spawnConstruction(data.construction.x, data.construction.y);
@@ -307,11 +331,24 @@ PlayState._spawnConstruction = function(x, y) {
   this.construction.renderable = true;
 };
 
-PlayState._spawnHeart = function (heart) {
+PlayState._spawnHeart = function(heart) {
   let sprite = this.hearts.create(heart.x, heart.y, 'heart');
   sprite.anchor.set(0.5, 0.5);
   sprite.animations.add('rotate', [0, 1, 2, 1], 5, true);
   sprite.animations.play('rotate');
+  this.game.physics.enable(sprite);
+  sprite.body.allowGravity = false;
+  sprite.y -= 10;
+  this.game.add.tween(sprite)
+      .to({y: sprite.y + 25}, 900, Phaser.Easing.Sinusoidal.InOut)
+      .yoyo(true)
+      .loop()
+      .start();
+};
+
+PlayState._spawnSpring = function(spring) {
+  let sprite = this.springs.create(spring.x, spring.y, 'spring');
+  sprite.anchor.set(0.5, 0.5);
   this.game.physics.enable(sprite);
   sprite.body.allowGravity = false;
   sprite.y -= 10;
@@ -383,10 +420,10 @@ PlayState._handleCollisions = function() {
     }, this);
   this.game.physics.arcade.overlap(this.blob, this.hearts, this._onBlobVsLives,
         null, this);
-
   this.game.physics.arcade.overlap(this.blob, this.construction, this._onBlobVsFallOnConstruction,
     null, this);
-
+  this.game.physics.arcade.overlap(this.blob, this.springs, this._onBlobVsSprings,
+        null, this);
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -433,6 +470,26 @@ PlayState._onBlobVsLives = function (blob, heart) {
   livesCount++;
 };
 
+PlayState._onBlobVsSprings = function (blob, spring) {
+  this.sfx.spring.play();
+  spring.kill();
+  if (this.level == 0) {
+    text = game.add.text(blob.x + 10, blob.y, 'You found a new spring in your step!');
+    text.anchor.setTo(0.5);
+    text.font = 'Press Start 2P';
+    text.fontSize = 15;
+    text.padding.set(10, 16);
+    setTimeout(function() {
+      text.destroy();
+    }, 4000);
+  }
+  JUMP_SPEED = 1000;
+  setTimeout(function() {
+    JUMP_SPEED = 645;
+  }, 10000);
+
+};
+
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
   this.sfx.nextLevel.play();
   this.game.state.restart(true, false, {level: this.level + 1});
@@ -448,6 +505,7 @@ PlayState._spawnStreetcar = function (x, y) {
 PlayState._killPlayer = function() {
   livesCount--;
   this.blob.kill();
+  JUMP_SPEED = 645;
   if (livesCount == 0) {
     alert('You lost, game over!');
     livesCount = 3;

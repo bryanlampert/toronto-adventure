@@ -137,13 +137,15 @@ PlayState.init = function (data) {
   this.hasPresto = false;
 
   this.level = (data.level || 0) % LEVEL_COUNT;
+  console.log(data)
 };
 
 PlayState.preload = function () {
   this.game.load.json('level:0', 'data/level00.json');
   this.game.load.json('level:1', 'data/level01.json');
 
-  this.game.load.image('background', 'images/background.jpg');
+  this.game.load.image('background-0', 'images/background.png');
+  this.game.load.image('background-1', 'images/background2.png');
   this.game.load.image('ground', 'images/ground.png');
   this.game.load.image('concrete-platform', 'images/concrete-platform.png');
   this.game.load.image('concrete-platform2', 'images/concrete-platform2.png');
@@ -183,7 +185,6 @@ PlayState.preload = function () {
 
 
 PlayState.create = function () {
-  this.game.add.tileSprite(0, 0, 900, 719, 'background');
   game.world.setBounds(0, -100, 5000, 700);
   this.sfx = {
     jump: this.game.add.audio('sfx:jump'),
@@ -194,8 +195,11 @@ PlayState.create = function () {
     nextLevel: this.game.add.audio('sfx:nextLevel'),
     heart: this.game.add.audio('sfx:heart')
   };
-
-  this.game.add.image(0, -150, 'background');
+  if (this.level == 0) {
+    this.game.add.image(0, -100, 'background-0');
+  } else if (this.level == 1) {
+    this.game.add.image(0, -100, 'background-1');
+  }
   this.game.stage.backgroundColor = "#01368c";
   this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
   this._createHud();
@@ -379,23 +383,22 @@ PlayState._handleCollisions = function() {
     }, this);
   this.game.physics.arcade.overlap(this.blob, this.hearts, this._onBlobVsLives,
         null, this);
-    null, this)
 
   this.game.physics.arcade.overlap(this.blob, this.construction, this._onBlobVsFallOnConstruction,
     null, this);
 
-  this.game.physics.arcade.overlap(this.blob, this.streetcar, this._onBlobVsStreetcar,
-    // ignore if there is no key or the player is on air
-    function (blob, streetcar) {
-      return this.hasPresto && blob.body.touching.down;
-    }, this);
+  // this.game.physics.arcade.overlap(this.blob, this.streetcar, this._onBlobVsStreetcar,
+  //   // ignore if there is no key or the player is on air
+  //   function (blob, streetcar) {
+  //     return this.hasPresto && blob.body.touching.down;
+  //   }, this);
 };
 
-PlayState._onBlobVsStreetcar = function (blob, streetcar) {
-//  this.sfx.door.play();
-  this.game.state.restart();
-  // TODO: go to the next level instead
-};
+// PlayState._onBlobVsStreetcar = function (blob, streetcar) {
+// //  this.sfx.door.play();
+//   this.game.state.restart();
+//   // TODO: go to the next level instead
+// };
 
 PlayState._onBlobVsToken = function (blob, token) {
   this.sfx.token.play();
@@ -405,7 +408,8 @@ PlayState._onBlobVsToken = function (blob, token) {
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
   this.sfx.death.play();
-  this.game.state.restart();
+  livesCount--;
+  this._killPlayer();
 };
 
 PlayState._onBlobVsEnemy = function (blob, enemy) {

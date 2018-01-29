@@ -1,7 +1,7 @@
 const game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
 let toggleHud;
 let playerBlob;
-let livesCount;
+let livesCount = 3;
 
 function Blob(game, x, y) {
   Phaser.Sprite.call(this, game, x, y, 'blob');
@@ -205,7 +205,7 @@ PlayState.create = function () {
   this._createHud();
   this.game.camera.follow(playerBlob)
   this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
-  livesCount = 3;
+  // livesCount = 3;
 
 };
 
@@ -348,7 +348,7 @@ PlayState._spawnNextLevelEntrance = function (x,y) {
   this.entrance.anchor.setTo(0.5, 1);
   this.game.physics.enable(this.entrance);
   this.entrance.body.allowGravity = false;
-}
+};
 
 PlayState._spawnEnemyWall = function (x, y, side) {
     let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
@@ -387,18 +387,7 @@ PlayState._handleCollisions = function() {
   this.game.physics.arcade.overlap(this.blob, this.construction, this._onBlobVsFallOnConstruction,
     null, this);
 
-  // this.game.physics.arcade.overlap(this.blob, this.streetcar, this._onBlobVsStreetcar,
-  //   // ignore if there is no key or the player is on air
-  //   function (blob, streetcar) {
-  //     return this.hasPresto && blob.body.touching.down;
-  //   }, this);
 };
-
-// PlayState._onBlobVsStreetcar = function (blob, streetcar) {
-// //  this.sfx.door.play();
-//   this.game.state.restart();
-//   // TODO: go to the next level instead
-// };
 
 PlayState._onBlobVsToken = function (blob, token) {
   this.sfx.token.play();
@@ -427,12 +416,13 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
 
 PlayState._onBlobVsFall = function (blob, floor) {
   this.sfx.death.play();
+  livesCount--;
   this._killPlayer();
-}
+};
 
 PlayState._onEnemyVsFall = function (enemy, floor) {
   enemy.kill();
-}
+};
 
 PlayState._onBlobVsPresto = function (blob, presto) {
   this.sfx.presto.play();

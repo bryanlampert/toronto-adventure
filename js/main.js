@@ -452,7 +452,7 @@ PlayState._killPlayer = function() {
     alert('You lost, game over!');
     livesCount = 3;
     tokenPickupCount = 0;
-    this.game.state.restart(true, false, {level: 0});
+    game.state.start('play', true, false, {level: 0});
   } else {
     this.game.state.restart(
       true,

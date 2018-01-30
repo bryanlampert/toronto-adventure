@@ -189,7 +189,6 @@ PlayState.preload = function () {
   this.game.load.image('rental', 'images/rental.png');
   this.game.load.image('construction', 'images/construction.png', 300, 150);
   this.game.load.image('enter-transit', 'images/open-door.png');
-  this.game.load.image('tile', 'images/tile.png');
   this.game.load.image('spike', 'images/spike.png');
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);

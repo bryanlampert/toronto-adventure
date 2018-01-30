@@ -155,13 +155,13 @@ PlayState.init = function (data) {
   this.hasPresto = false;
 
   this.level = (data.level || 0) % LEVEL_COUNT;
-  console.log(data)
 };
 
 PlayState.preload = function () {
   this.game.load.json('level:0', 'data/level00.json');
   this.game.load.json('level:1', 'data/level01.json');
 
+  this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
   this.game.load.image('background-1', 'images/background2.png');
   this.game.load.image('ground', 'images/ground.png');
@@ -203,6 +203,22 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
 
   this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
+
+  this.stage.backgroundColor = '#000';
+  this.progress = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 30, 'Loading \n    00%', {fill: 'white'});
+  this.progress.anchor.setTo(0.5, 0.5);
+  // If we want to add a loading bar, add the below:
+  // this._loadingBar = this.add.sprite(this.world.centerX - 288 / 2, this.world.centerY, "progressBar");
+  // this._loadingBar.anchor.setTo(0, 0);
+  // this.load.setPreloadSprite(this._loadingBar, 0);
+  this.game.load.onFileComplete.add(this._fileComplete, this);
+};
+
+PlayState._fileComplete = function (progress, cacheKey, success, totalLoaded, totalFiles) {
+  this.progress.text = "Loading \n   " + progress + "%";
+  if (this.progress.text == "100%") {
+    this.progress.kill();
+  }
 };
 
 
@@ -223,7 +239,7 @@ PlayState.create = function () {
   } else if (this.level == 1) {
     this.game.add.image(0, -100, 'background-1');
   }
-  this.game.stage.backgroundColor = "#01368c";
+  this.game.stage.backgroundColor = "#000";
   this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
   this._createHud();
   this.game.camera.follow(playerBlob)
@@ -520,7 +536,7 @@ PlayState._onBlobVsNewRental = function (blob, rental) {
   this.sfx.bonus.play();
   rental.kill();
   if (this.level == 1) {
-    text = game.add.text(blob.x + 10, blob.y, 'You found a new rental agreement!!\n Hurry to the listing to make sure you get there first!');
+    text = game.add.text(blob.x + 60, blob.y, 'You found a new rental agreement!!\n Hurry to the listing to make sure you get there first!');
     text.anchor.setTo(0.5);
     text.font = 'Press Start 2P';
     text.fontSize = 15;

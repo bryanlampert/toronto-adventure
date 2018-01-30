@@ -126,7 +126,7 @@ Raccoon.prototype.die = function () {
 };
 
 PlayState = {};
-const LEVEL_COUNT = 2;
+const LEVEL_COUNT = 3;
 
 PlayState.init = function (data) {
   this.game.renderer.renderSession.roundPixels = true;
@@ -160,6 +160,7 @@ PlayState.init = function (data) {
 PlayState.preload = function () {
   this.game.load.json('level:0', 'data/level00.json');
   this.game.load.json('level:1', 'data/level01.json');
+  this.game.load.json('level:2', 'data/level02.json');
 
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
@@ -175,6 +176,9 @@ PlayState.preload = function () {
   this.game.load.image('girder-lg', 'images/girder-lg.png');
   this.game.load.image('moving-girder-sm', 'images/moving-girder-sm.png');
   this.game.load.image('skyscraper', 'images/skyscraper.png');
+  this.game.load.image('tile-60', 'images/tile-60.png');
+  this.game.load.image('tile-105', 'images/tile-105.png');
+  this.game.load.image('tile-150', 'images/tile-150.png');
   this.game.load.image('invisible-wall', 'images/invisible_wall.png');
   this.game.load.image('invisible-floor', 'images/invisible_floor.png');
   this.game.load.image('font:numbers', 'images/numbers.png');
@@ -185,12 +189,15 @@ PlayState.preload = function () {
   this.game.load.image('rental', 'images/rental.png');
   this.game.load.image('construction', 'images/construction.png', 300, 150);
   this.game.load.image('enter-transit', 'images/open-door.png');
+  this.game.load.image('tile', 'images/tile.png');
+  this.game.load.image('spike', 'images/spike.png');
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
+  this.game.load.spritesheet('rail', 'images/third-rail-animated.png', 960, 30);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
 
   this.game.load.audio('sfx:jump', 'audio/jump.wav');
@@ -216,9 +223,6 @@ PlayState.preload = function () {
 
 PlayState._fileComplete = function (progress, cacheKey, success, totalLoaded, totalFiles) {
   this.progress.text = "Loading \n   " + progress + "%";
-  if (this.progress.text == "100%") {
-    this.progress.kill();
-  }
 };
 
 
@@ -246,6 +250,7 @@ PlayState.create = function () {
   this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
   // livesCount = 3;
 
+  this.progress.kill();
 };
 
 PlayState.update = function () {
@@ -284,6 +289,8 @@ PlayState._loadLevel = function (data) {
   this.hearts = this.game.add.group();
   this.springs = this.game.add.group();
   this.rental = this.game.add.group();
+  this.spike = this.game.add.group();
+  this.rails = this.game.add.group();
 
   this.movingPlatforms = this.add.physicsGroup();
   this.movingPlatforms.setAll('body.allowGravity', false);
@@ -295,6 +302,8 @@ PlayState._loadLevel = function (data) {
   data.hearts.forEach(this._spawnHeart, this);
   data.springs.forEach(this._spawnSpring, this);
   data.rentals.forEach(this._spawnRental, this);
+  data.spikes.forEach(this._spawnSpikes, this);
+  data.rails.forEach(this._spawnRails, this);
   this._spawnPresto(data.presto.x, data.presto.y);
   this._spawnStreetcar(data.streetcar.x, data.streetcar.y);
   this._spawnConstruction(data.construction.x, data.construction.y);
@@ -396,6 +405,22 @@ PlayState._spawnRental = function(rental) {
       .start();
 };
 
+PlayState._spawnSpikes = function(spike) {
+  let sprite = this.spike.create(spike.x, spike.y, 'spike');
+  sprite.anchor.set(0.5, 0.5);
+  this.game.physics.enable(sprite);
+  sprite.body.allowGravity = false;
+};
+
+PlayState._spawnRails = function(rail) {
+  let sprite = this.rails.create(rail.x, rail.y, 'rail');
+  sprite.anchor.set(0, 0);
+  sprite.animations.add('flash', [0, 0, 1, 0, 1], 5, true);
+  sprite.animations.play('flash');
+  this.game.physics.enable(sprite);
+  sprite.body.allowGravity = false;
+};
+
 PlayState._spawnMovingVert = function (x, y) {
   this.platform = this.movingPlatforms.create(x, y, 'moving-girder-sm');
   this.platform.anchor.set(0.5, 0.5);
@@ -463,6 +488,10 @@ PlayState._handleCollisions = function() {
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.rental, this._onBlobVsNewRental,
         null, this);
+  this.game.physics.arcade.overlap(this.blob, this.spike, this._onBlobVsSpike,
+        null, this);
+  this.game.physics.arcade.overlap(this.blob, this.rails, this._onBlobVsRail,
+        null, this);
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -476,6 +505,16 @@ PlayState._onBlobVsToken = function (blob, token) {
 };
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
+  this.sfx.death.play();
+  this._killPlayer();
+};
+
+PlayState._onBlobVsSpike = function (blob, spike) {
+  this.sfx.death.play();
+  this._killPlayer();
+};
+
+PlayState._onBlobVsRail = function (blob, rail) {
   this.sfx.death.play();
   this._killPlayer();
 };
@@ -517,7 +556,7 @@ PlayState._onBlobVsSprings = function (blob, spring) {
   this.sfx.bonus.play();
   spring.kill();
   if (this.level == 0) {
-    text = game.add.text(blob.x + 10, blob.y, 'You found a new spring in your step!');
+    text = game.add.text(blob.x + 10, blob.y, 'The snow melted.. \n You found a new spring in your step!');
     text.anchor.setTo(0.5);
     text.font = 'Press Start 2P';
     text.fontSize = 15;
@@ -617,6 +656,6 @@ PlayState._createHud = function () {
 
 window.onload = function () {
   game.state.add('play', PlayState);
-  game.state.start('play', true, false, {level: 0});
+  game.state.start('play', true, false, {level: 2});
 };
 

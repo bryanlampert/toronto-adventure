@@ -94,7 +94,9 @@
   "streetcar": {"x": 4800, "y": 550},
   "construction": {"x": 2450, "y": 450},
   "springs": [{"x": 3100, "y": 210}],
-  "rentals": []
+  "rentals": [],
+  "spikes": [],
+  "rails": []
 }
 
 

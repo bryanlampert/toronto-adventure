@@ -1,11 +1,13 @@
 const game = new Phaser.Game(960, 600, Phaser.AUTO, 'game');
+
 let toggleHud;
 let playerBlob;
+let text;
 let livesCount = 3;
 let tokenPickupCount = 0;
 let JUMP_SPEED = 645;
-let text;
 let SPEED = 200;
+let bossHealth = 100;
 
 WebFontConfig = {
   active: function() {
@@ -55,8 +57,8 @@ Blob.prototype.jump = function () {
 };
 
 Blob.prototype.bounce = function () {
-    const BOUNCE_SPEED = 200;
-    this.body.velocity.y = -BOUNCE_SPEED;
+  let BOUNCE_SPEED = 200;
+  this.body.velocity.y = -BOUNCE_SPEED;
 };
 
 Blob.prototype._getAnimationName = function () {
@@ -204,6 +206,7 @@ PlayState.preload = function () {
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
   this.game.load.image('background-1', 'images/background2.png');
+  this.game.load.image('background-boss', 'images/ikea-background.png');
   this.game.load.image('ground', 'images/ground.png');
   this.game.load.image('concrete-platform', 'images/concrete-platform.png');
   this.game.load.image('concrete-platform2', 'images/concrete-platform2.png');
@@ -281,6 +284,8 @@ PlayState.create = function () {
     this.game.add.image(0, -100, 'background-0');
   } else if (this.level == 1) {
     this.game.add.image(0, -100, 'background-1');
+  } else if (this.level == 3) {
+    this.game.add.image(0, 0, 'background-boss');
   }
   this.game.stage.backgroundColor = "#000";
 
@@ -366,6 +371,8 @@ PlayState._loadBossLevel = function (data) {
   this.raccoons = this.game.add.group();
   this.boss = this.game.add.group();
 
+  this.bossHealthBar = new HealthBar(this.game, {x: 825, y: 20});
+  this.bossHealthBar.setPercent(bossHealth);
   data.platforms.forEach(this._spawnPlatform, this);
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons, boss: data.boss});
   const GRAVITY = 1250;
@@ -597,9 +604,26 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
 
 PlayState._onBlobVsFinalEnemy = function (blob, boss) {
   if (blob.body.velocity.y > 0) {
-    blob.bounce();
-    boss.kill();
+    blob.body.velocity.y = -800;
     this.sfx.stomp.play();
+    let randomHitAmount = Math.floor(Math.random() * 20) + 5;
+    bossHealth -= randomHitAmount;
+    this.bossHealthBar.setPercent(bossHealth);
+
+    if (this.boss.body.velocity.x > 0) {
+      this.boss.body.velocity.x = -Boss.SPEED;
+      this.boss.scale.x = -1;
+    } else if (this.boss.body.velocity.x < 0) {
+      this.boss.body.velocity.x = Boss.SPEED;
+      this.boss.scale.x = 1;
+    }
+
+    if (bossHealth <= 0) {
+      boss.kill();
+      // send to endgame credits when created
+      alert("You win!")
+      game.state.start('play', true, false, {level: 0});
+    }
   }
   else {
     this.sfx.death.play();

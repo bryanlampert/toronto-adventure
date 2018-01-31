@@ -125,8 +125,46 @@ Raccoon.prototype.die = function () {
     }, this);
 };
 
+function Boss(game, x, y) {
+    Phaser.Sprite.call(this, game, x, y, 'ikea-monkey');
+
+    // anchor
+    this.anchor.set(0.5);
+    // animation
+    this.animations.add('move', [0, 1], 3, true);
+    this.animations.add('die', [3, 4, 3, 4, 3, 4, 3, 3, 3, 3, 3, 3], 12);
+    this.animations.play('move');
+
+    // physic properties
+    this.game.physics.enable(this);
+    this.body.collideWorldBounds = true;
+    this.body.velocity.x = -Boss.SPEED;
+}
+
+Boss.SPEED = 80;
+
+Boss.prototype = Object.create(Phaser.Sprite.prototype);
+Boss.prototype.constructor = Boss;
+Boss.prototype.update = function () {
+    if (this.body.touching.right || this.body.blocked.right) {
+        this.body.velocity.x = -Boss.SPEED;
+        this.scale.x = 1;
+    }
+    else if (this.body.touching.left || this.body.blocked.left) {
+        this.body.velocity.x = Boss.SPEED;
+        this.scale.x = -1;
+    }
+};
+Boss.prototype.die = function () {
+    this.body.enable = false;
+
+    this.animations.play('die').onComplete.addOnce(function () {
+        this.kill();
+    }, this);
+};
+
 PlayState = {};
-const LEVEL_COUNT = 3;
+const LEVEL_COUNT = 4;
 
 PlayState.init = function (data) {
   this.game.renderer.renderSession.roundPixels = true;
@@ -154,13 +192,14 @@ PlayState.init = function (data) {
 
   this.hasPresto = false;
 
-  this.level = (data.level || 0) % LEVEL_COUNT;
+  this.level = (data.level) % LEVEL_COUNT;
 };
 
 PlayState.preload = function () {
   this.game.load.json('level:0', 'data/level00.json');
   this.game.load.json('level:1', 'data/level01.json');
   this.game.load.json('level:2', 'data/level02.json');
+  this.game.load.json('level:boss', 'data/levelBoss.json');
 
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
@@ -196,6 +235,7 @@ PlayState.preload = function () {
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
+  this.game.load.spritesheet('ikea-monkey', 'images/ikea-monkey-animated.png', 100, 122);
   this.game.load.spritesheet('rail', 'images/third-rail-animated.png', 960, 30);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
 
@@ -226,7 +266,7 @@ PlayState._fileComplete = function (progress, cacheKey, success, totalLoaded, to
 
 
 PlayState.create = function () {
-  game.world.setBounds(0, -100, 5000, 700);
+
   this.sfx = {
     jump: this.game.add.audio('sfx:jump'),
     token: this.game.add.audio('sfx:token'),
@@ -242,13 +282,17 @@ PlayState.create = function () {
   } else if (this.level == 1) {
     this.game.add.image(0, -100, 'background-1');
   }
-  this.game.stage.backgroundColor = "#fff";
-  this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
-  this._createHud();
-  this.game.camera.follow(playerBlob)
-  this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100)
-  // livesCount = 3;
+  this.game.stage.backgroundColor = "#000";
 
+  if (this.level == 3) {
+    this._loadBossLevel(this.game.cache.getJSON('level:boss'));
+  } else {
+    this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
+  }
+
+  this._createHud();
+  this.game.camera.follow(playerBlob);
+  this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100);
   this.progress.kill();
 };
 
@@ -278,6 +322,7 @@ PlayState._handleInput = function () {
 };
 
 PlayState._loadLevel = function (data) {
+  game.world.setBounds(0, -100, 5000, 700);
   this.bgDecoration = this.game.add.group();
   this.platforms = this.game.add.group();
   this.tokens = this.game.add.group();
@@ -314,6 +359,19 @@ PlayState._loadLevel = function (data) {
   this.game.physics.arcade.gravity.y = GRAVITY;
 };
 
+PlayState._loadBossLevel = function (data) {
+  game.world.setBounds(0, 0, 960, 600);
+  this.platforms = this.game.add.group();
+  this.enemyWalls = this.game.add.group();
+  this.raccoons = this.game.add.group();
+  this.boss = this.game.add.group();
+
+  data.platforms.forEach(this._spawnPlatform, this);
+  this._spawnCharacters({blob: data.blob, raccoons: data.raccoons, boss: data.boss});
+  const GRAVITY = 1250;
+  this.game.physics.arcade.gravity.y = GRAVITY;
+};
+
 PlayState._spawnPlatform = function (platform) {
   let sprite = this.platforms.create(platform.x, platform.y, platform.image);
   this.game.physics.enable(sprite);
@@ -327,10 +385,14 @@ PlayState._spawnCharacters = function (data) {
     // spawn hero
   this.blob = new Blob(this.game, data.blob.x, data.blob.y);
   this.game.add.existing(this.blob);
-    data.raccoons.forEach(function (raccoon) {
+  data.raccoons.forEach(function (raccoon) {
     let sprite = new Raccoon(this.game, raccoon.x, raccoon.y);
     this.raccoons.add(sprite);
   }, this);
+  if (this.level == 3) {
+    this.boss = new Boss(this.game, data.boss.x, data.boss.y);
+    this.game.add.existing(this.boss);
+  }
 };
 
 PlayState._spawnToken = function (token) {
@@ -449,26 +511,29 @@ PlayState._spawnNextLevelEntrance = function (x,y) {
 };
 
 PlayState._spawnEnemyWall = function (x, y, side) {
-    let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
-    // anchor and y displacement
-    sprite.anchor.set(side === 'left' ? 1 : 0, 1);
+  let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
+  // anchor and y displacement
+  sprite.anchor.set(side === 'left' ? 1 : 0, 1);
 
-    // physic properties
-    this.game.physics.enable(sprite);
-    sprite.body.immovable = true;
-    sprite.body.allowGravity = false;
-    sprite.renderable = false;
+  // physic properties
+  this.game.physics.enable(sprite);
+  sprite.body.immovable = true;
+  sprite.body.allowGravity = false;
+  sprite.renderable = false;
 };
 
 PlayState._handleCollisions = function() {
   // console.log(this.platforms)
   this.game.physics.arcade.collide(this.raccoons, this.platforms);
+  this.game.physics.arcade.collide(this.boss, this.platforms);
   this.game.physics.arcade.collide(this.raccoons, this.enemyWalls);
   this.game.physics.arcade.collide(this.blob, this.platforms);
   this.game.physics.arcade.overlap(this.blob, this.tokens, this._onBlobVsToken,
     null, this);
   this.game.physics.arcade.overlap(this.blob, this.raccoons,
     this._onBlobVsEnemy, null, this);
+  this.game.physics.arcade.overlap(this.blob, this.boss,
+    this._onBlobVsFinalEnemy, null, this);
   this.game.physics.arcade.overlap(this.blob, this.presto, this._onBlobVsPresto,
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.floor, this._onBlobVsFall,
@@ -519,12 +584,24 @@ PlayState._onBlobVsRail = function (blob, rail) {
 };
 
 PlayState._onBlobVsEnemy = function (blob, enemy) {
-  if (blob.body.velocity.y > 0) { // kill enemies when hero is falling
+  if (blob.body.velocity.y > 0) {
     blob.bounce();
     enemy.die();
     this.sfx.stomp.play();
   }
-  else { //game over, restart
+  else {
+    this.sfx.death.play();
+    this._killPlayer();
+  }
+};
+
+PlayState._onBlobVsFinalEnemy = function (blob, boss) {
+  if (blob.body.velocity.y > 0) {
+    blob.bounce();
+    boss.kill();
+    this.sfx.stomp.play();
+  }
+  else {
     this.sfx.death.play();
     this._killPlayer();
   }
@@ -600,7 +677,12 @@ PlayState._onBlobVsNewRental = function (blob, rental) {
 
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
   this.sfx.nextLevel.play();
-  this.game.state.restart(true, false, {level: this.level + 1});
+  if (this.level == 2) {
+    return this.game.state.restart(true, false, {level: 3});
+  } else {
+    this.game.state.restart(true, false, {level: this.level + 1});
+
+  }
 };
 
 PlayState._spawnStreetcar = function (x, y) {
@@ -633,32 +715,46 @@ PlayState._killPlayer = function() {
 };
 
 PlayState._createHud = function () {
-  this.prestoIcon = this.game.make.image(0, 21, 'icon:presto');
-  this.prestoIcon.anchor.set(0, 0.5);
-  const NUMBERS_STR = '0123456789X ';
-  this.tokenFont = this.game.add.retroFont('font:numbers', 20, 26,
-    NUMBERS_STR, 6);
-  this.livesFont = this.game.add.retroFont('font:numbers', 20, 26,
-    NUMBERS_STR, 6);
-  let tokenIcon = this.game.make.image(this.prestoIcon.width + 7, 2, 'icon:token');
-  let tokenScoreImg = this.game.make.image(tokenIcon.x + tokenIcon.width,
-    tokenIcon.height / 2, this.tokenFont);
-  tokenScoreImg.anchor.set(0, 0.5);
-
-  let livesIcon = this.game.make.image(this.prestoIcon.width + 7, 50, 'icon:heart');
-  let livesCountImg = this.game.make.image(livesIcon.x + livesIcon.width,
-    70, this.livesFont);
-  livesCountImg.anchor.set(0, 0.5);
-
-
+  let livesIcon;
+  let livesCountImg;
   this.hud = this.game.add.group();
-  this.hud.add(tokenIcon);
+  this.hud.fixedToCamera = true;
   this.hud.position.set(10, 10);
-  this.hud.add(tokenScoreImg);
-  this.hud.add(this.prestoIcon);
+
+  if (this.level == 3) {
+    const NUMBERS_STR = '0123456789X ';
+    this.livesFont = this.game.add.retroFont('font:numbers', 20, 26,
+      NUMBERS_STR, 6);
+    livesIcon = this.game.make.image(75, 0, 'icon:heart');
+    livesCountImg = this.game.make.image(livesIcon.x + livesIcon.width,
+      livesIcon.height / 2, this.livesFont);
+    livesCountImg.anchor.set(0, 0.5);
+
+  } else {
+    this.prestoIcon = this.game.make.image(0, 21, 'icon:presto');
+    this.prestoIcon.anchor.set(0, 0.5);
+    const NUMBERS_STR = '0123456789X ';
+    this.tokenFont = this.game.add.retroFont('font:numbers', 20, 26,
+      NUMBERS_STR, 6);
+    this.livesFont = this.game.add.retroFont('font:numbers', 20, 26,
+      NUMBERS_STR, 6);
+    let tokenIcon = this.game.make.image(this.prestoIcon.width + 7, 2, 'icon:token');
+    let tokenScoreImg = this.game.make.image(tokenIcon.x + tokenIcon.width,
+      tokenIcon.height / 2, this.tokenFont);
+    tokenScoreImg.anchor.set(0, 0.5);
+
+    livesIcon = this.game.make.image(this.prestoIcon.width + 7, 50, 'icon:heart');
+    livesCountImg = this.game.make.image(livesIcon.x + livesIcon.width,
+      70, this.livesFont);
+    livesCountImg.anchor.set(0, 0.5);
+
+    this.hud.add(tokenIcon);
+    this.hud.add(tokenScoreImg);
+    this.hud.add(this.prestoIcon);
+  }
+
   this.hud.add(livesIcon);
   this.hud.add(livesCountImg);
-  this.hud.fixedToCamera = true;
 
 };
 

@@ -1,0 +1,38 @@
+{
+  "platforms": [
+      {"image": "ground", "x": 0, "y": 546},
+      {"image": "concrete-platform", "x": 40, "y": 0},
+      {"image": "concrete-platform", "x": 40, "y": 32},
+      {"image": "concrete-platform", "x": 40, "y": 64},
+      {"image": "concrete-platform", "x": 40, "y": 96},
+      {"image": "concrete-platform", "x": 40, "y": 128},
+      {"image": "concrete-platform", "x": 40, "y": 160},
+      {"image": "concrete-platform", "x": 40, "y": 192},
+      {"image": "concrete-platform", "x": 40, "y": 224},
+      {"image": "concrete-platform", "x": 40, "y": 256},
+      {"image": "concrete-platform", "x": 40, "y": 288},
+      {"image": "concrete-platform", "x": 40, "y": 320},
+      {"image": "concrete-platform", "x": 40, "y": 352},
+      {"image": "concrete-platform", "x": 40, "y": 384},
+      {"image": "concrete-platform", "x": 40, "y": 416},
+      {"image": "concrete-platform", "x": 40, "y": 448},
+
+      {"image": "girder-sm", "x": 100, "y": 400},
+      {"image": "girder-sm", "x": 120, "y": 50},
+      {"image": "girder-sm", "x": 140, "y": 250},
+      {"image": "girder-sm", "x": 220, "y": 100},
+      {"image": "girder-sm", "x": 340, "y": 75},
+      {"image": "girder-sm", "x": 430, "y": 300},
+      {"image": "girder-sm", "x": 608, "y": 99},
+      {"image": "girder-sm", "x": 700, "y": 230},
+      {"image": "girder-sm", "x": 800, "y": 390},
+      {"image": "girder-sm", "x": 850, "y": 150}
+
+    ],
+  "blob": {"x": 20, "y": 0},
+  "raccoons": [{"x": 700, "y": 500},
+              {"x": 890, "y": 505},
+              {"x": 403, "y": 502}
+    ],
+  "boss": {"x": 600, "y": 480}
+}

@@ -242,7 +242,7 @@ PlayState.create = function () {
   } else if (this.level == 1) {
     this.game.add.image(0, -100, 'background-1');
   }
-  this.game.stage.backgroundColor = "#000";
+  this.game.stage.backgroundColor = "#fff";
   this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
   this._createHud();
   this.game.camera.follow(playerBlob)
@@ -581,7 +581,16 @@ PlayState._onBlobVsNewRental = function (blob, rental) {
     text.padding.set(10, 16);
     setTimeout(function() {
       text.destroy();
-    }, 4000);
+    }, 6000);
+  } else if (this.level == 2 && rental.x == "3948") {
+    text = game.add.text(blob.x + 60, blob.y, 'You found another rental agreement!!\n Hurry to the listing and watch out for the \n THIRD RAIL!');
+    text.anchor.setTo(0.5);
+    text.font = 'Press Start 2P';
+    text.fontSize = 15;
+    text.padding.set(10, 16);
+    setTimeout(function() {
+      text.destroy();
+    }, 6000);
   }
   SPEED = 300;
   setTimeout(function() {

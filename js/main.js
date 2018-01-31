@@ -165,6 +165,7 @@ PlayState.preload = function () {
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
   this.game.load.image('background-1', 'images/background2.png');
+  this.game.load.image('background-2', 'images/background-subway.png');
   this.game.load.image('ground', 'images/ground.png');
   this.game.load.image('concrete-platform', 'images/concrete-platform.png');
   this.game.load.image('concrete-platform2', 'images/concrete-platform2.png');
@@ -241,6 +242,8 @@ PlayState.create = function () {
     this.game.add.image(0, -100, 'background-0');
   } else if (this.level == 1) {
     this.game.add.image(0, -100, 'background-1');
+  } else if (this.level == 2) {
+    this.game.add.image(0, -100, 'background-2');
   }
   this.game.stage.backgroundColor = "#fff";
   this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));

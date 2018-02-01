@@ -134,7 +134,8 @@ function Boss(game, x, y) {
     this.anchor.set(0.5);
     // animation
     this.animations.add('move', [0, 1], 3, true);
-    this.animations.add('die', [3, 4, 3, 4, 3, 4, 3, 3, 3, 3, 3, 3], 12);
+    this.animations.add('die', [3, 4, 3, 4, 3, 4, 3, 3, 4, 4, 4, 3], 12);
+    this.animations.add('stun', [1, 2, 1, 2, 1, 2], 6);
     this.animations.play('move');
 
     // physic properties
@@ -148,21 +149,27 @@ Boss.SPEED = 80;
 Boss.prototype = Object.create(Phaser.Sprite.prototype);
 Boss.prototype.constructor = Boss;
 Boss.prototype.update = function () {
-    if (this.body.touching.right || this.body.blocked.right) {
-        this.body.velocity.x = -Boss.SPEED;
-        this.scale.x = 1;
-    }
-    else if (this.body.touching.left || this.body.blocked.left) {
-        this.body.velocity.x = Boss.SPEED;
-        this.scale.x = -1;
-    }
+  if (this.body.touching.right || this.body.blocked.right) {
+    this.body.velocity.x = -Boss.SPEED;
+    this.scale.x = 1;
+  }
+  else if (this.body.touching.left || this.body.blocked.left) {
+    this.body.velocity.x = Boss.SPEED;
+    this.scale.x = -1;
+  }
 };
 Boss.prototype.die = function () {
-    this.body.enable = false;
+  this.body.enable = false;
 
-    this.animations.play('die').onComplete.addOnce(function () {
-        this.kill();
-    }, this);
+  this.animations.play('die').onComplete.addOnce(function () {
+    this.kill();
+  }, this);
+};
+
+Boss.prototype.stun = function () {
+  this.animations.play('stun').onComplete.addOnce(function () {
+    this.animations.play('move');
+  }, this);
 };
 
 PlayState = {};
@@ -239,7 +246,7 @@ PlayState.preload = function () {
   this.game.load.spritesheet('token', 'images/token_animated.png', 22, 22);
   this.game.load.spritesheet('heart', 'images/heart_animated.png', 22, 22);
   this.game.load.spritesheet('raccoon', 'images/raccoon.png', 42, 32);
-  this.game.load.spritesheet('ikea-monkey', 'images/ikea-monkey-animated.png', 100, 122);
+  this.game.load.spritesheet('ikea-monkey', 'images/ikea-monkey-animated.png', 108, 122);
   this.game.load.spritesheet('rail', 'images/third-rail-animated.png', 960, 30);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
 
@@ -548,7 +555,7 @@ PlayState._handleCollisions = function() {
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.floor, this._onBlobVsFall,
         null, this);
-  this.game.physics.arcade.overlap(this.racoons, this.floor, this._onEnemyVsFall,
+  this.game.physics.arcade.overlap(this.raccoons, this.floor, this._onEnemyVsFall,
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.entrance, this._onBlobVsNextLevel,
     function (blob, entrance) {
@@ -615,17 +622,19 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
 
     if (this.boss.body.velocity.x > 0) {
       this.boss.body.velocity.x = -Boss.SPEED;
+      this.boss.stun();
       this.boss.scale.x = -1;
     } else if (this.boss.body.velocity.x < 0) {
       this.boss.body.velocity.x = Boss.SPEED;
+      this.boss.stun();
       this.boss.scale.x = 1;
     }
 
     if (bossHealth <= 0) {
-      boss.kill();
+      boss.die();
       // send to endgame credits when created
-      alert("You win!")
-      game.state.start('play', true, false, {level: 0});
+    //  alert("You win!")
+      //game.state.start('play', true, false, {level: 0});
     }
   }
   else {

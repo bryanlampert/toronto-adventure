@@ -137,6 +137,7 @@ function Boss(game, x, y) {
     this.animations.add('move', [0, 1], 3, true);
     this.animations.add('die', [3, 4, 3, 4, 3, 4, 3, 3, 4, 4, 4, 3], 12);
     this.animations.add('stun', [1, 2, 1, 2, 1, 2], 6);
+    this.animations.add('throw', [1, 2, 1], 10);
     this.animations.play('move');
 
     // physic properties
@@ -335,7 +336,10 @@ PlayState.update = function () {
 
     if (distance > 100 && distance < 250) {
       weapon.fireAtSprite(this.blob);
+      this.boss.animations.play('throw');
       weapon.fire();
+    } else {
+      this.boss.animations.play('move');
     }
   }
 };
@@ -414,7 +418,7 @@ PlayState._loadBossLevel = function (data) {
   weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
   weapon.bulletSpeed = 600;
   weapon.bulletGravity = 0;
-  weapon.trackSprite(this.boss, -20, 20, true);
+  weapon.trackSprite(this.boss, -20, -20, true);
 };
 
 PlayState._spawnPlatform = function (platform) {

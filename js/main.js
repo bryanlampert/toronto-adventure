@@ -8,6 +8,7 @@ let tokenPickupCount = 0;
 let JUMP_SPEED = 645;
 let SPEED = 200;
 let bossHealth = 100;
+let weapon = {};
 
 WebFontConfig = {
   active: function() {
@@ -240,6 +241,7 @@ PlayState.preload = function () {
   this.game.load.image('construction', 'images/construction.png', 300, 150);
   this.game.load.image('enter-transit', 'images/open-door.png');
   this.game.load.image('spike', 'images/spike.png');
+  this.game.load.image('tool', 'images/tool.png');
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
@@ -264,15 +266,17 @@ PlayState.preload = function () {
   this.stage.backgroundColor = '#000';
   this.progress = this.game.add.text(this.game.world.centerX, this.game.world.centerY - 30, 'Loading \n    00%', {fill: 'white'});
   this.progress.anchor.setTo(0.5, 0.5);
-  // If we want to add a loading bar, add the below:
-  // this._loadingBar = this.add.sprite(this.world.centerX - 288 / 2, this.world.centerY, "progressBar");
-  // this._loadingBar.anchor.setTo(0, 0);
-  // this.load.setPreloadSprite(this._loadingBar, 0);
+  this.loadingBar = {};
+  this.loadingBar = new HealthBar(this.game, {x: this.game.world.centerX, y: this.game.world.centerY + 20});
+  this.loadingBar.setPercent(100);
+  this.loadingBar.flipped = false;
+  this.loadingBar.setBarColor('#6ACEF4');
   this.game.load.onFileComplete.add(this._fileComplete, this);
 };
 
 PlayState._fileComplete = function (progress, cacheKey, success, totalLoaded, totalFiles) {
   this.progress.text = "Loading \n   " + progress + "%";
+  this.loadingBar.setPercent(-progress);
 };
 
 
@@ -322,13 +326,25 @@ PlayState.update = function () {
   } else {
     this.entrance.renderable = false;
   }
+
+  if (this.level == 3) {
+    let distance = this.game.physics.arcade.distanceToXY(this.blob,
+                                                          this.boss.body.x,
+                                                          this.boss.body.y,
+                                                          false);
+
+    if (distance > 100 && distance < 250) {
+      weapon.fireAtSprite(this.blob);
+      weapon.fire();
+    }
+  }
 };
 
 PlayState._handleInput = function () {
-  if (this.keys.left.isDown) { // move hero left
+  if (this.keys.left.isDown) {
     this.blob.move(-1);
   }
-  else if (this.keys.right.isDown) { // move hero right
+  else if (this.keys.right.isDown) {
     this.blob.move(1);
   }
   else {
@@ -383,10 +399,22 @@ PlayState._loadBossLevel = function (data) {
 
   this.bossHealthBar = new HealthBar(this.game, {x: 825, y: 20});
   this.bossHealthBar.setPercent(bossHealth);
+  healthText = game.add.text(this.bossHealthBar.x + 5, this.bossHealthBar.y + 5, "Darwin's Health", { fill: "#ff00ff" });
+  healthText.anchor.setTo(0.5);
+  healthText.font = 'Press Start 2P';
+  healthText.fontSize = 15;
   data.platforms.forEach(this._spawnPlatform, this);
   this._spawnCharacters({blob: data.blob, raccoons: data.raccoons, boss: data.boss});
   const GRAVITY = 1250;
   this.game.physics.arcade.gravity.y = GRAVITY;
+
+  weapon = this.game.add.weapon(1, 'tool');
+  weapon.enableBody = true;
+  weapon.physicsBodyType = Phaser.Physics.ARCADE;
+  weapon.bulletKillType = Phaser.Weapon.KILL_WORLD_BOUNDS;
+  weapon.bulletSpeed = 600;
+  weapon.bulletGravity = 0;
+  weapon.trackSprite(this.boss, -20, 20, true);
 };
 
 PlayState._spawnPlatform = function (platform) {
@@ -399,7 +427,6 @@ PlayState._spawnPlatform = function (platform) {
 };
 
 PlayState._spawnCharacters = function (data) {
-    // spawn hero
   this.blob = new Blob(this.game, data.blob.x, data.blob.y);
   this.game.add.existing(this.blob);
   data.raccoons.forEach(function (raccoon) {
@@ -415,7 +442,7 @@ PlayState._spawnCharacters = function (data) {
 PlayState._spawnToken = function (token) {
     let sprite = this.tokens.create(token.x, token.y, 'token');
     sprite.anchor.set(0.5, 0.5);
-    sprite.animations.add('rotate', [0, 1, 2, 1], 6, true); // 6fps, looped
+    sprite.animations.add('rotate', [0, 1, 2, 1], 6, true);
     sprite.animations.play('rotate');
     this.game.physics.enable(sprite);
     sprite.body.allowGravity = false;
@@ -529,10 +556,8 @@ PlayState._spawnNextLevelEntrance = function (x,y) {
 
 PlayState._spawnEnemyWall = function (x, y, side) {
   let sprite = this.enemyWalls.create(x, y, 'invisible-wall');
-  // anchor and y displacement
   sprite.anchor.set(side === 'left' ? 1 : 0, 1);
 
-  // physic properties
   this.game.physics.enable(sprite);
   sprite.body.immovable = true;
   sprite.body.allowGravity = false;
@@ -540,17 +565,16 @@ PlayState._spawnEnemyWall = function (x, y, side) {
 };
 
 PlayState._handleCollisions = function() {
-  // console.log(this.platforms)
   this.game.physics.arcade.collide(this.raccoons, this.platforms);
   this.game.physics.arcade.collide(this.boss, this.platforms);
   this.game.physics.arcade.collide(this.raccoons, this.enemyWalls);
   this.game.physics.arcade.collide(this.blob, this.platforms);
   this.game.physics.arcade.overlap(this.blob, this.tokens, this._onBlobVsToken,
-    null, this);
-  this.game.physics.arcade.overlap(this.blob, this.raccoons,
-    this._onBlobVsEnemy, null, this);
-  this.game.physics.arcade.overlap(this.blob, this.boss,
-    this._onBlobVsFinalEnemy, null, this);
+        null, this);
+  this.game.physics.arcade.overlap(this.blob, this.raccoons, this._onBlobVsEnemy,
+        null, this);
+  this.game.physics.arcade.overlap(this.blob, this.boss, this._onBlobVsFinalEnemy,
+        null, this);
   this.game.physics.arcade.overlap(this.blob, this.presto, this._onBlobVsPresto,
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.floor, this._onBlobVsFall,
@@ -564,7 +588,7 @@ PlayState._handleCollisions = function() {
   this.game.physics.arcade.overlap(this.blob, this.hearts, this._onBlobVsLives,
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.construction, this._onBlobVsFallOnConstruction,
-    null, this);
+        null, this);
   this.game.physics.arcade.overlap(this.blob, this.springs, this._onBlobVsSprings,
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.rental, this._onBlobVsNewRental,
@@ -573,6 +597,10 @@ PlayState._handleCollisions = function() {
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.rails, this._onBlobVsRail,
         null, this);
+  if (this.level == 3) {
+    this.game.physics.arcade.overlap(this.blob, weapon.bullets, this._onBlobVsMonkeyRage, null, this);
+  }
+
 };
 
 PlayState._onBlobVsToken = function (blob, token) {
@@ -633,14 +661,20 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
     if (bossHealth <= 0) {
       boss.die();
       // send to endgame credits when created
-    //  alert("You win!")
-      //game.state.start('play', true, false, {level: 0});
+      alert("You win!")
+      game.state.start('play', true, false, {level: 0});
+      bossHealth = 100;
     }
-  }
-  else {
+  } else {
     this.sfx.death.play();
     this._killPlayer();
   }
+};
+
+PlayState._onBlobVsMonkeyRage = function (blob, weapon) {
+  this.sfx.death.play();
+  weapon.kill();
+  this._killPlayer();
 };
 
 PlayState._onBlobVsFall = function (blob, floor) {

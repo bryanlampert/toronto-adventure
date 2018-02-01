@@ -213,6 +213,7 @@ PlayState.preload = function () {
   this.game.load.json('level:1', 'data/level01.json');
   this.game.load.json('level:2', 'data/level02.json');
   this.game.load.json('level:boss', 'data/levelBoss.json');
+  this.game.load.json('level:easy', 'data/easylevel.json');
 
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');

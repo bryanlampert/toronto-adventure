@@ -9,6 +9,8 @@ let JUMP_SPEED = 645;
 let SPEED = 200;
 let bossHealth = 100;
 let weapon = {};
+let welcome;
+let welcomeHasLoaded = false;
 
 WebFontConfig = {
   active: function() {
@@ -243,6 +245,7 @@ PlayState.preload = function () {
   this.game.load.image('enter-transit', 'images/open-door.png');
   this.game.load.image('spike', 'images/spike.png');
   this.game.load.image('tool', 'images/tool.png');
+  this.game.load.image('welcome', 'images/welcome.png');
 
   this.game.load.spritesheet('streetcar', 'images/streetcar.png', 250, 150);
   this.game.load.spritesheet('blob', 'images/blob.png', 36, 42);
@@ -280,9 +283,9 @@ PlayState._fileComplete = function (progress, cacheKey, success, totalLoaded, to
   this.loadingBar.setPercent(-progress);
 };
 
-
 PlayState.create = function () {
-
+  this.loadingBar.kill();
+  groupWelcome = this.game.add.group();
   this.sfx = {
     jump: this.game.add.audio('sfx:jump'),
     token: this.game.add.audio('sfx:token'),
@@ -294,7 +297,13 @@ PlayState.create = function () {
     bonus: this.game.add.audio('sfx:bonus')
   };
   if (this.level == 0) {
-    this.game.add.image(0, -100, 'background-0');
+    bg = this.game.add.image(0, -100, 'background-0');
+    if (!welcomeHasLoaded) {
+      bg.alpha = 0;
+      this.game.add.tween(bg).to( { alpha: 1 }, 6000, Phaser.Easing.Linear.None, true);
+    } else {
+      bg.alpha = 1;
+    }
   } else if (this.level == 1) {
     this.game.add.image(0, -100, 'background-1');
   } else if (this.level == 2) {
@@ -310,7 +319,7 @@ PlayState.create = function () {
     this._loadLevel(this.game.cache.getJSON(`level:${this.level}`));
   }
 
-  this._createHud();
+  // this._createHud();
   this.game.camera.follow(playerBlob);
   this.game.camera.deadzone = new Phaser.Rectangle(200, 0, 300, 100);
   this.progress.kill();
@@ -389,6 +398,13 @@ PlayState._loadLevel = function (data) {
   this._spawnFloor(data.floor.x, data.floor.y);
   this._spawnNextLevelEntrance(data.entrance.x, data.entrance.y);
   this._spawnMovingVert(data.movingPlatform.x, data.movingPlatform.y);
+  this._createHud();
+  if (this.level == 0 && !welcomeHasLoaded) {
+    welcome = this.game.add.sprite(0, 0, 'welcome');
+    welcome.alpha = 1;
+    this.game.add.tween(welcome).to( { alpha: 0 }, 6000, Phaser.Easing.Linear.None, true);
+    welcomeHasLoaded = true;
+  }
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
@@ -419,6 +435,7 @@ PlayState._loadBossLevel = function (data) {
   weapon.bulletSpeed = 600;
   weapon.bulletGravity = 0;
   weapon.trackSprite(this.boss, -20, -20, true);
+  this._createHud();
 };
 
 PlayState._spawnPlatform = function (platform) {
@@ -830,10 +847,18 @@ PlayState._createHud = function () {
   this.hud.add(livesIcon);
   this.hud.add(livesCountImg);
 
+  if (this.level == 0 && !welcomeHasLoaded) {
+    this.hud.alpha = 0;
+    this.game.add.tween(this.hud).to( { alpha: 1 }, 8000, Phaser.Easing.Linear.None, true);
+  } else {
+    this.hud.alpha = 1;
+    this.game.world.bringToTop(this.hud);
+  }
+
 };
 
 window.onload = function () {
   game.state.add('play', PlayState);
-  game.state.start('play', true, false, {level: 2});
+  game.state.start('play', true, false, {level: 0});
 };
 

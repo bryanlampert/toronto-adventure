@@ -85,12 +85,19 @@
       {"image": "concrete-platform", "x": 2824, "y": 160},
       {"image": "concrete-platform8", "x": 2792, "y": 192},
 
+      {"image": "concrete-platform8", "x": 2088, "y": -64},
       {"image": "concrete-platform8", "x": 2088, "y": -32},
+      {"image": "concrete-platform8", "x": 2344, "y": -64},
       {"image": "concrete-platform8", "x": 2344, "y": -32},
+      {"image": "concrete-platform8", "x": 2600, "y": -64},
       {"image": "concrete-platform8", "x": 2600, "y": -32},
+      {"image": "concrete-platform8", "x": 2856, "y": -64},
       {"image": "concrete-platform8", "x": 2856, "y": -32},
+      {"image": "concrete-platform8", "x": 3112, "y": -64},
       {"image": "concrete-platform8", "x": 3112, "y": -32},
+      {"image": "concrete-platform8", "x": 3368, "y": -64},
       {"image": "concrete-platform8", "x": 3368, "y": -32},
+      {"image": "concrete-platform8", "x": 3624, "y": -64},
       {"image": "concrete-platform8", "x": 3624, "y": -32},
 
       {"image": "concrete-platform8", "x": 2984, "y": 64},
@@ -153,7 +160,7 @@
       {"image": "token", "x": 3950, "y": 300},
       {"image": "token", "x": 3950, "y": 350}
   ],
-  "blob": {"x": 4500, "y": 150},
+  "blob": {"x": 30, "y": 350},
   "raccoons": [{"x": 700, "y": 370},
               {"x": 1825, "y": 500},
               {"x": 2005, "y": 500},

@@ -177,7 +177,7 @@ Boss.prototype.stun = function () {
 };
 
 PlayState = {};
-const LEVEL_COUNT = 4;
+const LEVEL_COUNT = 5;
 
 PlayState.init = function (data) {
   this.game.renderer.renderSession.roundPixels = true;
@@ -210,14 +210,14 @@ PlayState.init = function (data) {
 
 PlayState.preload = function () {
   this.game.load.json('level:0', 'data/level00.json');
-  this.game.load.json('level:1', 'data/easylevel.json');
-  this.game.load.json('level:2', 'data/level01.json');
-  this.game.load.json('level:3', 'data/level02.json');
+  this.game.load.json('level:1', 'data/level01.json');
+  this.game.load.json('level:2', 'data/level02.json');
+  this.game.load.json('level:3', 'data/level03.json');
   this.game.load.json('level:boss', 'data/levelBoss.json');
 
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
-  this.game.load.image('background-1', 'images/background-easylevel.png');
+  this.game.load.image('background-1', 'images/background1.png');
   this.game.load.image('background-2', 'images/background2.png');
   this.game.load.image('background-3', 'images/background-subway.png');
   this.game.load.image('background-boss', 'images/ikea-background.png');
@@ -311,7 +311,7 @@ PlayState.create = function () {
   } else if (this.level == 2) {
     this.game.add.image(0, -100, 'background-2');
   } else if (this.level == 3) {
-    this.game.add.image(0, 0, 'background-3');
+    this.game.add.image(0, -100, 'background-3');
   } else if (this.level == 4) {
     this.game.add.image(0, 0, 'background-boss');
   }
@@ -341,7 +341,7 @@ PlayState.update = function () {
     this.entrance.renderable = false;
   }
 
-  if (this.level == 3) {
+  if (this.level == 4) {
     let distance = this.game.physics.arcade.distanceToXY(this.blob,
                                                           this.boss.body.x,
                                                           this.boss.body.y,
@@ -622,7 +622,7 @@ PlayState._handleCollisions = function() {
         null, this);
   this.game.physics.arcade.overlap(this.blob, this.rails, this._onBlobVsRail,
         null, this);
-  if (this.level == 3) {
+  if (this.level == 4) {
     this.game.physics.arcade.overlap(this.blob, weapon.bullets, this._onBlobVsMonkeyRage, null, this);
   }
 
@@ -745,7 +745,7 @@ PlayState._onBlobVsSprings = function (blob, spring) {
 PlayState._onBlobVsNewRental = function (blob, rental) {
   this.sfx.bonus.play();
   rental.kill();
-  if (this.level == 1) {
+  if (this.level == 2) {
     text = game.add.text(blob.x + 60, blob.y, 'You found a new rental agreement!!\n Hurry to the listing to make sure you get there first!');
     text.anchor.setTo(0.5);
     text.font = 'Press Start 2P';
@@ -754,7 +754,7 @@ PlayState._onBlobVsNewRental = function (blob, rental) {
     setTimeout(function() {
       text.destroy();
     }, 6000);
-  } else if (this.level == 2 && rental.x == "3948") {
+  } else if (this.level == 3 && rental.x == "3948") {
     text = game.add.text(blob.x + 60, blob.y, 'You found another rental agreement!!\n Hurry to the listing and watch out for the \n THIRD RAIL!');
     text.anchor.setTo(0.5);
     text.font = 'Press Start 2P';
@@ -816,7 +816,7 @@ PlayState._createHud = function () {
   this.hud.fixedToCamera = true;
   this.hud.position.set(10, 10);
 
-  if (this.level == 3) {
+  if (this.level == 4) {
     const NUMBERS_STR = '0123456789X ';
     this.livesFont = this.game.add.retroFont('font:numbers', 20, 26,
       NUMBERS_STR, 6);
@@ -863,6 +863,6 @@ PlayState._createHud = function () {
 
 window.onload = function () {
   game.state.add('play', PlayState);
-  game.state.start('play', true, false, {level: 1});
+  game.state.start('play', true, false, {level: 3});
 };
 

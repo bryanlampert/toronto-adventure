@@ -567,12 +567,12 @@ PlayState._spawnRental = function(rental) {
       .yoyo(true)
       .loop()
       .start();
-  if (this.level == 1) {
+  if (this.level == 2) {
     rentalText = game.add.text(1500, 20, 'A new rental was \n  just posted on Kijiji! \nPick up the lease so you can \n  rush over to the apartment!');
     rentalText.font = 'Press Start 2P';
     rentalText.fontSize = 13;
     rentalText.padding.set(10, 16);
-  } else if (this.level == 2) {
+  } else if (this.level == 3) {
     rentalText = game.add.text(400, 60, 'Another rental posted!!\nGet there faster this time!');
     rentalText.font = 'Press Start 2P';
     rentalText.fontSize = 13;
@@ -822,32 +822,32 @@ PlayState._endRental = function () {
 
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
   this.sfx.nextLevel.play();
-  if (this.level == 2) {
-    return this.game.state.restart(true, false, {level: 3});
-  } else {
-    this.game.state.restart(true, false, {level: this.level + 1});
-  }
   if (this.level == 0) {
     this.songs.zero.stop();
     this.songs.one.play();
     this.songs.one.loop = true;
     this.songs.one.volume = 0.2;
+
   } else if (this.level == 1) {
     this.songs.one.stop();
     this.songs.two.play();
     this.songs.two.loop = true;
     this.songs.two.volume = 0.2;
+
   } else if (this.level == 2) {
     this.songs.two.stop();
     this.songs.three.play();
     this.songs.three.loop = true;
     this.songs.three.volume = 0.2;
+
   } else if (this.level == 3) {
     this.songs.three.stop();
     this.songs.boss.play();
     this.songs.boss.loop = true;
     this.songs.boss.volume = 0.2;
   }
+
+  this.game.state.restart(true, false, {level: this.level + 1});
 
 };
 
@@ -899,10 +899,12 @@ PlayState._killPlayer = function() {
         this.songs.rental.stop();
       }
     } else if (this.level == 3) {
-      this.songs.boss.stop();
+      this.songs.three.stop();
       if (this.songs.rental.isPlaying) {
         this.songs.rental.stop();
       }
+    } else if (this.level == 4) {
+      this.songs.boss.stop();
     }
   }
 };

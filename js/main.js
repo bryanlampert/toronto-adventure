@@ -217,6 +217,23 @@ PlayState.preload = function () {
   this.game.load.json('level:boss', 'data/levelBoss.json');
   this.game.load.json('level:easy', 'data/easylevel.json');
 
+  this.game.load.audio('sfx:token', 'audio/token.wav');
+  this.game.load.audio('sfx:stomp', 'audio/stomp.wav');
+  this.game.load.audio('sfx:death', 'audio/death.mp3');
+  this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
+  this.game.load.audio('sfx:nextLevel', 'audio/nextLevel.wav');
+  this.game.load.audio('sfx:heart', 'audio/heart.wav');
+  this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
+  this.game.load.audio('sfx:jump', 'audio/jump.wav');
+
+  this.game.load.audio('music:background-0', 'audio/background-0.mp3');
+  this.game.load.audio('music:background-1', 'audio/background-1.mp3');
+  this.game.load.audio('music:background-2', 'audio/background-2.mp3');
+  this.game.load.audio('music:background-3', 'audio/background-3.mp3');
+  this.game.load.audio('music:final-countdown', 'audio/final-countdown.mp3');
+  this.game.load.audio('music:rental', 'audio/sandstorm.mp3');
+  this.game.load.audio('music:spring', 'audio/what-is-love.mp3');
+
   this.game.load.image('progressBar', 'images/progress-bar.png');
   this.game.load.image('background-0', 'images/background.png');
   this.game.load.image('background-1', 'images/background2.png');
@@ -259,15 +276,6 @@ PlayState.preload = function () {
   this.game.load.spritesheet('rail', 'images/third-rail-animated.png', 960, 30);
   this.game.load.spritesheet('icon:presto', 'images/presto-hud.png', 45, 30);
 
-  this.game.load.audio('sfx:jump', 'audio/jump.wav');
-  this.game.load.audio('sfx:token', 'audio/token.wav');
-  this.game.load.audio('sfx:stomp', 'audio/stomp.wav');
-  this.game.load.audio('sfx:death', 'audio/death.mp3');
-  this.game.load.audio('sfx:presto', 'audio/getPresto.wav');
-  this.game.load.audio('sfx:nextLevel', 'audio/nextLevel.wav');
-  this.game.load.audio('sfx:heart', 'audio/heart.wav');
-  this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
-
   this.game.load.script('webfont', '//ajax.googleapis.com/ajax/libs/webfont/1.4.7/webfont.js');
 
   this.stage.backgroundColor = '#000';
@@ -299,6 +307,23 @@ PlayState.create = function () {
     heart: this.game.add.audio('sfx:heart'),
     bonus: this.game.add.audio('sfx:bonus')
   };
+  this.songs = {
+    zero: this.game.add.audio('music:background-0'),
+    one: this.game.add.audio('music:background-1'),
+    two: this.game.add.audio('music:background-2'),
+    three: this.game.add.audio('music:background-3'),
+    boss: this.game.add.audio('music:final-countdown'),
+    spring: this.game.add.audio('music:spring'),
+    rental: this.game.add.audio('music:rental')
+  };
+
+  // play music
+  if (this.level == 0) {
+    this.songs.zero.play();
+    this.songs.zero.loop = true;
+    this.songs.zero.volume = 0.2;
+  }
+
   if (this.level == 0) {
     bg = this.game.add.image(0, -100, 'background-0');
     if (!welcomeHasLoaded) {
@@ -408,6 +433,7 @@ PlayState._loadLevel = function (data) {
     this.game.add.tween(welcome).to( { alpha: 0 }, 6000, Phaser.Easing.Linear.None, true);
     welcomeHasLoaded = true;
   }
+
   //enable gravity
   const GRAVITY = 1200;
   this.game.physics.arcade.gravity.y = GRAVITY;
@@ -751,20 +777,44 @@ PlayState._onBlobVsSprings = function (blob, spring) {
   spring.kill();
   springText.kill();
   JUMP_SPEED = 1000;
-  setTimeout(function() {
-    JUMP_SPEED = 645;
-  }, 10000);
+  if (this.level == 0) {
+    this.songs.zero.pause();
+    this.songs.spring.play();
+    this.songs.spring.volume = 0.4;
+  }
+  this.game.time.events.add(Phaser.Timer.SECOND * 10, this._endSpring, this);
+};
+
+PlayState._endSpring = function () {
+  JUMP_SPEED = 645;
+  this.songs.spring.stop();
+  this.songs.zero.resume();
 };
 
 PlayState._onBlobVsNewRental = function (blob, rental) {
   this.sfx.bonus.play();
   rental.kill();
   rentalText.renderable = false;
-
   SPEED = 300;
-  setTimeout(function() {
-    SPEED = 200;
-  }, 10000);
+  if (this.level == 2) {
+    this.songs.two.pause();
+  } else if (this.level == 3) {
+    this.songs.three.pause();
+  }
+  this.songs.rental.play();
+  this.songs.rental.volume = 0.4;
+
+  this.game.time.events.add(Phaser.Timer.SECOND * 10, this._endRental, this);
+};
+
+PlayState._endRental = function () {
+  SPEED = 200;
+  this.songs.rental.stop();
+  if (this.level == 2) {
+    this.songs.two.resume();
+  } else if (this.level == 3) {
+    this.songs.three.resume();
+  }
 };
 
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
@@ -773,8 +823,29 @@ PlayState._onBlobVsNextLevel = function (blob, entrance) {
     return this.game.state.restart(true, false, {level: 3});
   } else {
     this.game.state.restart(true, false, {level: this.level + 1});
-
   }
+  if (this.level == 0) {
+    this.songs.zero.stop();
+    this.songs.one.play();
+    this.songs.one.loop = true;
+    this.songs.one.volume = 0.2;
+  } else if (this.level == 1) {
+    this.songs.one.stop();
+    this.songs.two.play();
+    this.songs.two.loop = true;
+    this.songs.two.volume = 0.2;
+  } else if (this.level == 2) {
+    this.songs.two.stop();
+    this.songs.three.play();
+    this.songs.three.loop = true;
+    this.songs.three.volume = 0.2;
+  } else if (this.level == 3) {
+    this.songs.three.stop();
+    this.songs.boss.play();
+    this.songs.boss.loop = true;
+    this.songs.boss.volume = 0.2;
+  }
+
 };
 
 PlayState._spawnStreetcar = function (x, y) {
@@ -810,6 +881,25 @@ PlayState._killPlayer = function() {
       tokenPickupCount = 0;
     } else {
       tokenPickupCount -= 15;
+    }
+    //restart music
+    if (this.level == 0) {
+      this.songs.zero.stop();
+      if (this.songs.spring.isPlaying) {
+        this.songs.spring.stop();
+      }
+    } else if (this.level == 1) {
+      this.songs.one.stop();
+    } else if (this.level == 2) {
+      this.songs.two.stop();
+      if (this.songs.rental.isPlaying) {
+        this.songs.rental.stop();
+      }
+    } else if (this.level == 3) {
+      this.songs.boss.stop();
+      if (this.songs.rental.isPlaying) {
+        this.songs.rental.stop();
+      }
     }
   }
 };

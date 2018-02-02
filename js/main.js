@@ -789,7 +789,9 @@ PlayState._killPlayer = function() {
   this.blob.kill();
   JUMP_SPEED = 645;
   SPEED = 200;
-  rentalText.renderable = true;
+  if (this.level == 2 || this.level == 3) {
+    rentalText.renderable = true;
+  }
   if (livesCount == 0) {
     alert('You lost, game over!');
     livesCount = 3;
@@ -804,6 +806,11 @@ PlayState._killPlayer = function() {
         tokenPickupCount: tokenPickupCount
       }
     );
+    if ((tokenPickupCount - 15) < 0) {
+      tokenPickupCount = 0;
+    } else {
+      tokenPickupCount -= 15;
+    }
   }
 };
 

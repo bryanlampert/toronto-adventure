@@ -961,6 +961,6 @@ PlayState._createHud = function () {
 
 window.onload = function () {
   game.state.add('play', PlayState);
-  game.state.start('play', true, false, {level: 3});
+  game.state.start('play', true, false, {level: 0});
 };
 

@@ -11,6 +11,8 @@ let bossHealth = 100;
 let weapon = {};
 let welcome;
 let welcomeHasLoaded = false;
+let springText;
+let rentalText;
 
 WebFontConfig = {
   active: function() {
@@ -517,6 +519,12 @@ PlayState._spawnSpring = function(spring) {
       .yoyo(true)
       .loop()
       .start();
+  springText = game.add.text(spring.x, spring.y - 80, 'The snow melted.. and uncovered a spring!\n Suddenly you have a spring in your step!');
+  springText.anchor.setTo(0.5);
+  springText.font = 'Press Start 2P';
+  springText.fontSize = 15;
+  springText.padding.set(10, 16);
+
 };
 
 PlayState._spawnRental = function(rental) {
@@ -530,6 +538,24 @@ PlayState._spawnRental = function(rental) {
       .yoyo(true)
       .loop()
       .start();
+  if (this.level == 1) {
+    rentalText = game.add.text(1500, 20, 'A new rental was \n  just posted on Kijiji! \nPick up the lease so you can \n  rush over to the apartment!');
+    rentalText.font = 'Press Start 2P';
+    rentalText.fontSize = 13;
+    rentalText.padding.set(10, 16);
+  } else if (this.level == 2) {
+    rentalText = game.add.text(400, 60, 'Another rental posted!!\nGet there faster this time!');
+    rentalText.font = 'Press Start 2P';
+    rentalText.fontSize = 13;
+    rentalText.padding.set(10, 16);
+
+    rentalText = game.add.text(3490, 290, '      NEW RENTAL POSTING!!\n    Is third times the charm?\nbut watch out for the THIRD RAIL!');
+    rentalText.font = 'Press Start 2P';
+    rentalText.fontSize = 13;
+    rentalText.padding.set(10, 16);
+  }
+
+
 };
 
 PlayState._spawnSpikes = function(spike) {
@@ -723,16 +749,7 @@ PlayState._onBlobVsLives = function (blob, heart) {
 PlayState._onBlobVsSprings = function (blob, spring) {
   this.sfx.bonus.play();
   spring.kill();
-  if (this.level == 0) {
-    text = game.add.text(blob.x + 10, blob.y, 'The snow melted.. \n You found a new spring in your step!');
-    text.anchor.setTo(0.5);
-    text.font = 'Press Start 2P';
-    text.fontSize = 15;
-    text.padding.set(10, 16);
-    setTimeout(function() {
-      text.destroy();
-    }, 4000);
-  }
+  springText.kill();
   JUMP_SPEED = 1000;
   setTimeout(function() {
     JUMP_SPEED = 645;
@@ -742,25 +759,8 @@ PlayState._onBlobVsSprings = function (blob, spring) {
 PlayState._onBlobVsNewRental = function (blob, rental) {
   this.sfx.bonus.play();
   rental.kill();
-  if (this.level == 1) {
-    text = game.add.text(blob.x + 60, blob.y, 'You found a new rental agreement!!\n Hurry to the listing to make sure you get there first!');
-    text.anchor.setTo(0.5);
-    text.font = 'Press Start 2P';
-    text.fontSize = 15;
-    text.padding.set(10, 16);
-    setTimeout(function() {
-      text.destroy();
-    }, 6000);
-  } else if (this.level == 2 && rental.x == "3948") {
-    text = game.add.text(blob.x + 60, blob.y, 'You found another rental agreement!!\n Hurry to the listing and watch out for the \n THIRD RAIL!');
-    text.anchor.setTo(0.5);
-    text.font = 'Press Start 2P';
-    text.fontSize = 15;
-    text.padding.set(10, 16);
-    setTimeout(function() {
-      text.destroy();
-    }, 6000);
-  }
+  rentalText.renderable = false;
+
   SPEED = 300;
   setTimeout(function() {
     SPEED = 200;
@@ -789,6 +789,7 @@ PlayState._killPlayer = function() {
   this.blob.kill();
   JUMP_SPEED = 645;
   SPEED = 200;
+  rentalText.renderable = true;
   if (livesCount == 0) {
     alert('You lost, game over!');
     livesCount = 3;

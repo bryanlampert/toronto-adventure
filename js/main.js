@@ -226,11 +226,7 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
   this.game.load.audio('sfx:jump', 'audio/jump.wav');
 
-  this.game.load.audio('music:background-0', 'audio/background-0.mp3');
-  this.game.load.audio('music:background-1', 'audio/background-1.mp3');
-  this.game.load.audio('music:background-2', 'audio/background-2.mp3');
-  this.game.load.audio('music:background-3', 'audio/background-3.mp3');
-  this.game.load.audio('music:final-countdown', 'audio/final-countdown.mp3');
+  this.game.load.audio('music:boss', 'audio/final-countdown.mp3');
   this.game.load.audio('music:rental', 'audio/sandstorm.mp3');
   this.game.load.audio('music:spring', 'audio/what-is-love.mp3');
 
@@ -309,21 +305,10 @@ PlayState.create = function () {
     bonus: this.game.add.audio('sfx:bonus')
   };
   this.songs = {
-    zero: this.game.add.audio('music:background-0'),
-    one: this.game.add.audio('music:background-1'),
-    two: this.game.add.audio('music:background-2'),
-    three: this.game.add.audio('music:background-3'),
-    boss: this.game.add.audio('music:final-countdown'),
     spring: this.game.add.audio('music:spring'),
-    rental: this.game.add.audio('music:rental')
+    rental: this.game.add.audio('music:rental'),
+    boss: this.game.add.audio('music:boss')
   };
-
-  // play music
-  if (this.level == 0) {
-    this.songs.zero.play();
-    this.songs.zero.loop = true;
-    this.songs.zero.volume = 0.2;
-  }
 
   if (this.level == 0) {
     bg = this.game.add.image(0, -100, 'background-0');
@@ -359,7 +344,9 @@ PlayState.create = function () {
 PlayState.update = function () {
   this._handleCollisions();
   this._handleInput();
-  this.tokenFont.text = `x${tokenPickupCount}`;
+  if (this.level !== 4) {
+    this.tokenFont.text = `x${tokenPickupCount}`;
+  }
   this.livesFont.text = `x${livesCount}`;
   this.prestoIcon.frame = this.hasPresto ? 1 : 0;
   if (this.hasPresto) {
@@ -449,6 +436,8 @@ PlayState._loadBossLevel = function (data) {
   this.raccoons = this.game.add.group();
   this.boss = this.game.add.group();
 
+  this._endRental();
+
   this.bossHealthBar = new HealthBar(this.game, {x: 825, y: 20});
   this.bossHealthBar.setPercent(bossHealth);
   healthText = game.add.text(this.bossHealthBar.x + 5, this.bossHealthBar.y + 5, "Darwin's Health", { fill: "#ff00ff" });
@@ -468,6 +457,10 @@ PlayState._loadBossLevel = function (data) {
   weapon.bulletGravity = 0;
   weapon.trackSprite(this.boss, -20, -20, true);
   this._createHud();
+
+  this.songs.boss.play();
+  this.songs.boss.volume = 0.4;
+  this.songs.boss.loop = true;
 };
 
 PlayState._spawnPlatform = function (platform) {
@@ -780,18 +773,14 @@ PlayState._onBlobVsSprings = function (blob, spring) {
   spring.kill();
   springText.kill();
   JUMP_SPEED = 1000;
-  if (this.level == 0) {
-    this.songs.zero.pause();
-    this.songs.spring.play();
-    this.songs.spring.volume = 0.4;
-  }
+  this.songs.spring.play();
+  this.songs.spring.volume = 0.4;
   this.game.time.events.add(Phaser.Timer.SECOND * 10, this._endSpring, this);
 };
 
 PlayState._endSpring = function () {
   JUMP_SPEED = 645;
   this.songs.spring.stop();
-  this.songs.zero.resume();
 };
 
 PlayState._onBlobVsNewRental = function (blob, rental) {
@@ -799,13 +788,8 @@ PlayState._onBlobVsNewRental = function (blob, rental) {
   rental.kill();
   rentalText.renderable = false;
   SPEED = 300;
-  if (this.level == 2) {
-    this.songs.two.pause();
-  } else if (this.level == 3) {
-    this.songs.three.pause();
-  }
   this.songs.rental.play();
-  this.songs.rental.volume = 0.4;
+  this.songs.rental.volume = 0.3;
 
   this.game.time.events.add(Phaser.Timer.SECOND * 10, this._endRental, this);
 };
@@ -813,40 +797,13 @@ PlayState._onBlobVsNewRental = function (blob, rental) {
 PlayState._endRental = function () {
   SPEED = 200;
   this.songs.rental.stop();
-  if (this.level == 2) {
-    this.songs.two.resume();
-  } else if (this.level == 3) {
-    this.songs.three.resume();
-  }
 };
 
 PlayState._onBlobVsNextLevel = function (blob, entrance) {
   this.sfx.nextLevel.play();
-  if (this.level == 0) {
-    this.songs.zero.stop();
-    this.songs.one.play();
-    this.songs.one.loop = true;
-    this.songs.one.volume = 0.2;
-
-  } else if (this.level == 1) {
-    this.songs.one.stop();
-    this.songs.two.play();
-    this.songs.two.loop = true;
-    this.songs.two.volume = 0.2;
-
-  } else if (this.level == 2) {
-    this.songs.two.stop();
-    this.songs.three.play();
-    this.songs.three.loop = true;
-    this.songs.three.volume = 0.2;
-
-  } else if (this.level == 3) {
-    this.songs.three.stop();
-    this.songs.boss.play();
-    this.songs.boss.loop = true;
-    this.songs.boss.volume = 0.2;
+  if (this.songs.rental.isPlaying) {
+    this.songs.rental.stop();
   }
-
   this.game.state.restart(true, false, {level: this.level + 1});
 
 };
@@ -886,25 +843,11 @@ PlayState._killPlayer = function() {
       tokenPickupCount -= 15;
     }
     //restart music
-    if (this.level == 0) {
-      this.songs.zero.stop();
-      if (this.songs.spring.isPlaying) {
-        this.songs.spring.stop();
-      }
-    } else if (this.level == 1) {
-      this.songs.one.stop();
-    } else if (this.level == 2) {
-      this.songs.two.stop();
-      if (this.songs.rental.isPlaying) {
-        this.songs.rental.stop();
-      }
-    } else if (this.level == 3) {
-      this.songs.three.stop();
-      if (this.songs.rental.isPlaying) {
-        this.songs.rental.stop();
-      }
-    } else if (this.level == 4) {
-      this.songs.boss.stop();
+    if (this.songs.spring.isPlaying) {
+      this.songs.spring.stop();
+    }
+    if (this.songs.rental.isPlaying) {
+      this.songs.rental.stop();
     }
   }
 };
@@ -963,6 +906,6 @@ PlayState._createHud = function () {
 
 window.onload = function () {
   game.state.add('play', PlayState);
-  game.state.start('play', true, false, {level: 0});
+  game.state.start('play', true, false, {level: 3});
 };
 

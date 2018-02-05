@@ -231,8 +231,8 @@ PlayState.preload = function () {
   this.game.load.audio('music:spring', 'audio/what-is-love.mp3');
 
   this.game.load.image('progressBar', 'images/progress-bar.png');
-  this.game.load.image('background-0', 'images/background.png');
-  this.game.load.image('background-1', 'images/background1.png');
+  this.game.load.image('background-0', 'images/backgroundROM.png');
+  this.game.load.image('background-1', 'images/background.png');
   this.game.load.image('background-2', 'images/background2.png');
   this.game.load.image('background-3', 'images/background-subway.png');
   this.game.load.image('background-boss', 'images/ikea-background.png');

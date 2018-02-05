@@ -370,7 +370,7 @@ PlayState.update = function () {
     }
   }
 
-  if (this.blob.x > 2800) {
+  if (this.level == 1 && this.blob.x > 2800) {
     springText.alpha = 1;
   }
 };
@@ -740,6 +740,7 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
     }
   } else {
     this.sfx.death.play();
+    this.songs.boss.stop();
     this._killPlayer();
   }
 };
@@ -827,10 +828,9 @@ PlayState._killPlayer = function() {
     rentalText.renderable = true;
   }
   if (livesCount == 0) {
-    alert('You lost, game over!');
     livesCount = 3;
     tokenPickupCount = 0;
-    game.state.start('play', true, false, {level: 0});
+    this.game.state.start('lose', true, false);
   } else {
     this.game.state.restart(
       true,
@@ -846,6 +846,7 @@ PlayState._killPlayer = function() {
       tokenPickupCount -= 15;
     }
     //restart music
+    this.songs.boss.stop();
     if (this.songs.spring.isPlaying) {
       this.songs.spring.stop();
     }
@@ -906,15 +907,38 @@ PlayState._createHud = function () {
   }
 };
 
+GameOver = {};
+let enterKey;
+GameOver.preload = function () {
+  this.stage.backgroundColor = '#0000FF';
+};
+GameOver.create = function ()  {
+  enterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
+
+  loserText = "Oh no... you lost all your lives :( \n Press enter to play again!";
+  loseText = game.add.text(game.world.centerX, game.world.centerY, loserText, { fill: "#ffffff" });
+  loseText.anchor.setTo(0.5);
+  loseText.font = 'Press Start 2P';
+  loseText.fontSize = 25;
+  loseText.alpha = 0;
+  this.game.add.tween(loseText).to( { alpha: 1 }, 6000, Phaser.Easing.Linear.None, true);
+
+};
+GameOver.update = function () {
+  if (enterKey.isDown) {
+    game.state.start('play', true, false, {level: 0});
+  }
+};
+
 EndGame = {};
 
-EndGame.preload = function() {
+EndGame.preload = function () {
   this.game.load.image('win', 'images/win-screen.png');
 };
 
-EndGame.create = function() {
+EndGame.create = function () {
   this.stage.backgroundColor = '#000';
-  let winnerText = "You've defeated Darwin!! \n \nsomething tells me that this isn't over......"
+  let winnerText = "You've defeated Darwin!! \n \nsomething tells me that this isn't over......";
   winText = game.add.text(game.world.centerX, game.world.centerY, winnerText, { fill: "#ffffff" });
   winText.anchor.setTo(0.5);
   winText.font = 'Press Start 2P';
@@ -927,12 +951,13 @@ EndGame.create = function() {
   this.game.add.tween(winner).to( { alpha: 1 }, 10000, Phaser.Easing.Linear.None, true);
 };
 
-EndGame.update = function() {
+EndGame.update = function () {
 };
 
 window.onload = function () {
   game.state.add('play', PlayState);
   game.state.add('win', EndGame);
+  game.state.add('lose', GameOver);
   game.state.start('play', true, false, {level: 0});
 };
 

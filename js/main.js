@@ -369,6 +369,10 @@ PlayState.update = function () {
       this.boss.animations.play('move');
     }
   }
+
+  if (this.blob.x > 2800) {
+    springText.alpha = 1;
+  }
 };
 
 PlayState._handleInput = function () {
@@ -541,11 +545,12 @@ PlayState._spawnSpring = function(spring) {
       .yoyo(true)
       .loop()
       .start();
-  springText = game.add.text(spring.x, spring.y - 80, 'The snow melted.. and uncovered a spring!\n Suddenly you have a spring in your step!');
+  springText = game.add.text(spring.x, 60, 'The snow melted.. and uncovered a spring!\n Suddenly you have a spring in your step!');
   springText.anchor.setTo(0.5);
   springText.font = 'Press Start 2P';
   springText.fontSize = 15;
   springText.padding.set(10, 16);
+  springText.alpha = 0;
 
 };
 

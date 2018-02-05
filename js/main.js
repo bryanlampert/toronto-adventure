@@ -911,18 +911,11 @@ GameOver = {};
 let enterKey;
 GameOver.preload = function () {
   this.stage.backgroundColor = '#0000FF';
+  this.game.load.image('game-over', 'images/game-over.png');
 };
 GameOver.create = function ()  {
   enterKey = this.game.input.keyboard.addKey(Phaser.Keyboard.ENTER);
-
-  loserText = "Oh no... you lost all your lives :( \n Press enter to play again!";
-  loseText = game.add.text(game.world.centerX, game.world.centerY, loserText, { fill: "#ffffff" });
-  loseText.anchor.setTo(0.5);
-  loseText.font = 'Press Start 2P';
-  loseText.fontSize = 25;
-  loseText.alpha = 0;
-  this.game.add.tween(loseText).to( { alpha: 1 }, 6000, Phaser.Easing.Linear.None, true);
-
+  this.game.add.sprite(0, 0, 'game-over');
 };
 GameOver.update = function () {
   if (enterKey.isDown) {

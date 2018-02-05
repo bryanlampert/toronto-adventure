@@ -731,9 +731,7 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
     if (bossHealth <= 0) {
       boss.die();
       // send to endgame credits when created
-      alert("You win!")
-      game.state.start('play', true, false, {level: 0});
-      bossHealth = 100;
+      game.state.start('win', true, true);
     }
   } else {
     this.sfx.death.play();
@@ -901,11 +899,35 @@ PlayState._createHud = function () {
     this.hud.alpha = 1;
     this.game.world.bringToTop(this.hud);
   }
+};
 
+EndGame = {};
+
+EndGame.preload = function() {
+  this.game.load.image('win', 'images/win-screen.png');
+};
+
+EndGame.create = function() {
+  this.stage.backgroundColor = '#000';
+  let winnerText = "You've defeated Darwin!! \n \nsomething tells me that this isn't over......"
+  winText = game.add.text(game.world.centerX, game.world.centerY, winnerText, { fill: "#ffffff" });
+  winText.anchor.setTo(0.5);
+  winText.font = 'Press Start 2P';
+  winText.fontSize = 20;
+  winText.alpha = 1;
+  this.game.add.tween(winText).to( { alpha: 0 }, 6000, Phaser.Easing.Linear.None, true);
+
+  winner = this.game.add.sprite(0, 0, 'win');
+  winner.alpha = 0;
+  this.game.add.tween(winner).to( { alpha: 1 }, 10000, Phaser.Easing.Linear.None, true);
+};
+
+EndGame.update = function() {
 };
 
 window.onload = function () {
   game.state.add('play', PlayState);
-  game.state.start('play', true, false, {level: 3});
+  game.state.add('win', EndGame);
+  game.state.start('play', true, false, {level: 0});
 };
 

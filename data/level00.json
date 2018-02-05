@@ -1,0 +1,115 @@
+{
+  "platforms": [
+      {"image": "ground", "x": 0, "y": 546},
+      {"image": "concrete-platform4", "x": 0, "y": 300},
+      {"image": "concrete-platform4", "x": 340, "y": 420},
+      {"image": "concrete-platform4", "x": 650, "y": 350},
+      {"image": "concrete-platform8", "x": 1000, "y": 150},
+      {"image": "concrete-platform2", "x": 1700, "y": 100},
+      {"image": "concrete-platform2", "x": 1600, "y": 260},
+      {"image": "concrete-platform2", "x": 1700, "y": 420},
+      {"image": "concrete-platform4", "x": 2600, "y": 400},
+      {"image": "concrete-platform4", "x": 2800, "y": 325},
+      {"image": "concrete-platform4", "x": 3000, "y": 250},
+
+      {"image": "concrete-platform", "x": 2600, "y": 514},
+      {"image": "concrete-platform", "x":3096, "y": 514},
+
+      {"image": "concrete-platform2", "x": 3333, "y": 450},
+      {"image": "concrete-platform2", "x": 3533, "y": 450},
+      {"image": "concrete-platform2", "x": 3733, "y": 450},
+      {"image": "concrete-platform2", "x": 3933, "y": 450},
+      {"image": "concrete-platform2", "x": 4133, "y": 450}
+  ],
+  "tokens": [
+      {"image": "token", "x": 800, "y": 510},
+      {"image": "token", "x": 833, "y": 440},
+      {"image": "token", "x": 867, "y": 380},
+      {"image": "token", "x": 900, "y": 350},
+      {"image": "token", "x": 933, "y": 380},
+      {"image": "token", "x": 967, "y": 440},
+
+      {"image": "token", "x": 1000, "y": 510},
+      {"image": "token", "x": 1033, "y": 440},
+      {"image": "token", "x": 1067, "y": 380},
+      {"image": "token", "x": 1100, "y": 350},
+      {"image": "token", "x": 1133, "y": 380},
+      {"image": "token", "x": 1167, "y": 440},
+
+      {"image": "token", "x": 1200, "y": 510},
+      {"image": "token", "x": 1233, "y": 440},
+      {"image": "token", "x": 1267, "y": 380},
+      {"image": "token", "x": 1300, "y": 350},
+      {"image": "token", "x": 1333, "y": 380},
+      {"image": "token", "x": 1367, "y": 440},
+      {"image": "token", "x": 1400, "y": 510},
+
+      {"image": "token", "x": 3265, "y": 510},
+      {"image": "token", "x": 3298, "y": 440},
+      {"image": "token", "x": 3332, "y": 380},
+      {"image": "token", "x": 3365, "y": 350},
+      {"image": "token", "x": 3398, "y": 380},
+      {"image": "token", "x": 3432, "y": 440},
+
+      {"image": "token", "x": 3465, "y": 510},
+      {"image": "token", "x": 3498, "y": 440},
+      {"image": "token", "x": 3532, "y": 380},
+      {"image": "token", "x": 3565, "y": 350},
+      {"image": "token", "x": 3598, "y": 380},
+      {"image": "token", "x": 3632, "y": 440},
+
+      {"image": "token", "x": 3665, "y": 510},
+      {"image": "token", "x": 3698, "y": 440},
+      {"image": "token", "x": 3732, "y": 380},
+      {"image": "token", "x": 3765, "y": 350},
+      {"image": "token", "x": 3798, "y": 380},
+      {"image": "token", "x": 3832, "y": 440},
+
+      {"image": "token", "x": 3865, "y": 510},
+      {"image": "token", "x": 3898, "y": 440},
+      {"image": "token", "x": 3932, "y": 380},
+      {"image": "token", "x": 3965, "y": 350},
+      {"image": "token", "x": 3998, "y": 380},
+      {"image": "token", "x": 4032, "y": 440},
+
+      {"image": "token", "x": 4065, "y": 510},
+      {"image": "token", "x": 4098, "y": 440},
+      {"image": "token", "x": 4132, "y": 380},
+      {"image": "token", "x": 4165, "y": 350},
+      {"image": "token", "x": 4198, "y": 380},
+      {"image": "token", "x": 4232, "y": 440},
+      {"image": "token", "x": 4265, "y": 510}
+
+  ],
+  "blob": {"x": 30, "y": 0},
+  "raccoons": [ {"x": 925, "y": 0},
+                {"x": 1000, "y": 0},
+                {"x": 1075, "y": 0},
+                {"x": 1150, "y": 0},
+
+                {"x": 670, "y": 200},
+                {"x": 2750, "y": 500},
+                {"x": 2900, "y": 500}
+
+              ],
+  "presto": {"x": 3020, "y": 180},
+  "floor": {"x": 30, "y": 641},
+  "movingPlatform": {"x": -3000, "y": -500},
+  "entrance": {"x": 4890, "y": 546},
+  "hearts": [{"x": 1732, "y": 40}, {"x": 3769, "y": -30}],
+  "streetcar": {"x": 4800, "y": 550},
+  "construction": {"x": 2450, "y": -450},
+  "springs": [{"x": 6100, "y": -510}],
+  "rentals": [],
+  "spikes": [],
+  "rails": []
+}
+
+
+
+
+
+
+
+
+

@@ -21,8 +21,8 @@
       {"image": "girder-md", "x": 3500, "y": 205},
       {"image": "girder-md", "x": 3800, "y": 400},
       {"image": "girder-sm", "x": 3760, "y": 35},
-      {"image": "girder-md", "x": 4100, "y": 350},
-      {"image": "girder-sm", "x": 4299, "y": 180},
+      {"image": "girder-md", "x": 4050, "y": 350},
+      {"image": "girder-sm", "x": 4260, "y": 210},
       {"image": "skyscraper", "x": 4300, "y": 175},
       {"image": "girder-lg", "x": 4690, "y": 220},
       {"image": "girder-lg", "x": 4865, "y": 220}
@@ -66,7 +66,7 @@
       {"x": 2015, "y": 560},
       {"x": 2055, "y": 560},
       {"x": 2575, "y": 430},
-      {"x": 4200, "y": 320}
+      {"x": 4100, "y": 320}
   ],
   "presto": {"x": 2450, "y": 250},
   "floor": {"x": 30, "y": 641},

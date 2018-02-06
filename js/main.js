@@ -362,13 +362,14 @@ PlayState.update = function () {
                                                           this.boss.body.x,
                                                           this.boss.body.y,
                                                           false);
-
-    if (distance > 100 && distance < 250) {
-      weapon.fireAtSprite(this.blob);
-      this.boss.animations.play('throw');
-      weapon.fire();
-    } else {
-      this.boss.animations.play('move');
+    if (bossHealth >= 1) {
+      if (distance > 100 && distance < 250) {
+        weapon.fireAtSprite(this.blob);
+        this.boss.animations.play('throw');
+        weapon.fire();
+      } else {
+        this.boss.animations.play('move');
+      }
     }
   }
 
@@ -739,13 +740,17 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
     if (bossHealth <= 0) {
       boss.die();
       // send to endgame credits when created
-      game.state.start('win', true, true);
+      this.game.time.events.add(Phaser.Timer.SECOND * 1, this._winSendToCredits, this);
     }
   } else {
     this.sfx.death.play();
     this.songs.boss.stop();
     this._killPlayer();
   }
+};
+
+PlayState._winSendToCredits = function () {
+  game.state.start('win', true, true);
 };
 
 PlayState._onBlobVsMonkeyRage = function (blob, weapon) {

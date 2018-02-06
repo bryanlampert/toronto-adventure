@@ -225,6 +225,7 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:heart', 'audio/heart.wav');
   this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
   this.game.load.audio('sfx:jump', 'audio/jump.wav');
+  this.game.load.audio('sfx:darwin', 'audio/darwin-yell.wav');
 
   this.game.load.audio('music:boss', 'audio/final-countdown.mp3');
   this.game.load.audio('music:rental', 'audio/sandstorm.mp3');
@@ -302,7 +303,8 @@ PlayState.create = function () {
     presto: this.game.add.audio('sfx:presto'),
     nextLevel: this.game.add.audio('sfx:nextLevel'),
     heart: this.game.add.audio('sfx:heart'),
-    bonus: this.game.add.audio('sfx:bonus')
+    bonus: this.game.add.audio('sfx:bonus'),
+    darwin: this.game.add.audio('sfx:darwin')
   };
   this.songs = {
     spring: this.game.add.audio('music:spring'),
@@ -732,6 +734,7 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
       this.boss.stun();
       this.boss.scale.x = 1;
     }
+    this.sfx.darwin.play();
 
     if (bossHealth <= 0) {
       boss.die();

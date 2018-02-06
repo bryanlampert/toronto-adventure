@@ -225,6 +225,7 @@ PlayState.preload = function () {
   this.game.load.audio('sfx:heart', 'audio/heart.wav');
   this.game.load.audio('sfx:bonus', 'audio/bonus.wav');
   this.game.load.audio('sfx:jump', 'audio/jump.wav');
+  this.game.load.audio('sfx:darwin', 'audio/darwin-yell.wav');
 
   this.game.load.audio('music:boss', 'audio/final-countdown.mp3');
   this.game.load.audio('music:rental', 'audio/sandstorm.mp3');
@@ -302,7 +303,8 @@ PlayState.create = function () {
     presto: this.game.add.audio('sfx:presto'),
     nextLevel: this.game.add.audio('sfx:nextLevel'),
     heart: this.game.add.audio('sfx:heart'),
-    bonus: this.game.add.audio('sfx:bonus')
+    bonus: this.game.add.audio('sfx:bonus'),
+    darwin: this.game.add.audio('sfx:darwin')
   };
   this.songs = {
     spring: this.game.add.audio('music:spring'),
@@ -360,13 +362,14 @@ PlayState.update = function () {
                                                           this.boss.body.x,
                                                           this.boss.body.y,
                                                           false);
-
-    if (distance > 100 && distance < 250) {
-      weapon.fireAtSprite(this.blob);
-      this.boss.animations.play('throw');
-      weapon.fire();
-    } else {
-      this.boss.animations.play('move');
+    if (bossHealth >= 1) {
+      if (distance > 100 && distance < 250) {
+        weapon.fireAtSprite(this.blob);
+        this.boss.animations.play('throw');
+        weapon.fire();
+      } else {
+        this.boss.animations.play('move');
+      }
     }
   }
 
@@ -689,17 +692,14 @@ PlayState._onBlobVsToken = function (blob, token) {
 };
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
 PlayState._onBlobVsSpike = function (blob, spike) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
 PlayState._onBlobVsRail = function (blob, rail) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
@@ -710,7 +710,6 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
     this.sfx.stomp.play();
   }
   else {
-    this.sfx.death.play();
     this._killPlayer();
   }
 };
@@ -732,27 +731,29 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
       this.boss.stun();
       this.boss.scale.x = 1;
     }
+    this.sfx.darwin.play();
 
     if (bossHealth <= 0) {
       boss.die();
       // send to endgame credits when created
-      game.state.start('win', true, true);
+      this.game.time.events.add(Phaser.Timer.SECOND * 1, this._winSendToCredits, this);
     }
   } else {
-    this.sfx.death.play();
     this.songs.boss.stop();
     this._killPlayer();
   }
 };
 
+PlayState._winSendToCredits = function () {
+  game.state.start('win', true, true);
+};
+
 PlayState._onBlobVsMonkeyRage = function (blob, weapon) {
-  this.sfx.death.play();
   weapon.kill();
   this._killPlayer();
 };
 
 PlayState._onBlobVsFall = function (blob, floor) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
@@ -820,6 +821,8 @@ PlayState._spawnStreetcar = function (x, y) {
 };
 
 PlayState._killPlayer = function() {
+  this.sfx.death.play();
+  this.sfx.death.volume = 0.5;
   livesCount--;
   this.blob.kill();
   JUMP_SPEED = 645;

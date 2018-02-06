@@ -2,10 +2,10 @@
   "name": "toronto-adventure",
   "version": "1.0.0",
   "description": "LHL Final Project",
-  "main": "index.js",
+  "main": "index.html",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
+    "start": "./node_modules/http-server/bin/http-server"
   },
   "repository": {
     "type": "git",
@@ -21,6 +21,6 @@
     "http-server": "^0.11.1"
   },
   "devDependencies": {
-    "browser-sync": "^2.23.6",
+    "browser-sync": "^2.23.6"
   }
 }

@@ -692,17 +692,14 @@ PlayState._onBlobVsToken = function (blob, token) {
 };
 
 PlayState._onBlobVsFallOnConstruction = function (blob, construction) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
 PlayState._onBlobVsSpike = function (blob, spike) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
 PlayState._onBlobVsRail = function (blob, rail) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
@@ -713,7 +710,6 @@ PlayState._onBlobVsEnemy = function (blob, enemy) {
     this.sfx.stomp.play();
   }
   else {
-    this.sfx.death.play();
     this._killPlayer();
   }
 };
@@ -743,7 +739,6 @@ PlayState._onBlobVsFinalEnemy = function (blob, boss) {
       this.game.time.events.add(Phaser.Timer.SECOND * 1, this._winSendToCredits, this);
     }
   } else {
-    this.sfx.death.play();
     this.songs.boss.stop();
     this._killPlayer();
   }
@@ -754,13 +749,11 @@ PlayState._winSendToCredits = function () {
 };
 
 PlayState._onBlobVsMonkeyRage = function (blob, weapon) {
-  this.sfx.death.play();
   weapon.kill();
   this._killPlayer();
 };
 
 PlayState._onBlobVsFall = function (blob, floor) {
-  this.sfx.death.play();
   this._killPlayer();
 };
 
@@ -828,6 +821,8 @@ PlayState._spawnStreetcar = function (x, y) {
 };
 
 PlayState._killPlayer = function() {
+  this.sfx.death.play();
+  this.sfx.death.volume = 0.5;
   livesCount--;
   this.blob.kill();
   JUMP_SPEED = 645;
